@@ -15,7 +15,7 @@ const settingsSchema = z.object({
   bankName: z.string().nullable().optional(),
   bankAccountNumber: z.string().nullable().optional(),
   bankAccountName: z.string().nullable().optional(),
-  paystackSubaccountCode: z.string().nullable().optional(),
+  flutterwaveSubaccountId: z.string().nullable().optional(),
   isPublished: z.coerce.boolean().default(false),
 });
 
@@ -34,7 +34,7 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
     bankName: formData.get("bankName") || null,
     bankAccountNumber: formData.get("bankAccountNumber") || null,
     bankAccountName: formData.get("bankAccountName") || null,
-    paystackSubaccountCode: formData.get("paystackSubaccountCode") || null,
+    flutterwaveSubaccountId: formData.get("flutterwaveSubaccountId") || null,
     isPublished: formData.get("isPublished") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };

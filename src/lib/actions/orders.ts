@@ -5,7 +5,7 @@ import { priceCartItems, type CartItemRequest } from "@/lib/order-pricing";
 import { reserveStock, InsufficientStockError } from "@/lib/inventory";
 import { validateDiscountCode } from "@/lib/discounts";
 import { randomOrderNumber } from "@/lib/order-number";
-import { initializeTransaction } from "@/lib/paystack";
+import { initializeTransaction } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
 import { customerOrderPendingEmail, sellerOrderPendingEmail } from "@/lib/email-templates";
 
@@ -14,12 +14,12 @@ type PlaceOrderInput = {
   items: CartItemRequest[];
   customer: { name: string; phone: string; email?: string };
   shippingAddress: { address: string; state: string };
-  paymentMethod: "PAYSTACK" | "BANK_TRANSFER" | "CASH_ON_DELIVERY";
+  paymentMethod: "FLUTTERWAVE" | "BANK_TRANSFER" | "CASH_ON_DELIVERY";
   discountCode?: string;
   customerNote?: string;
 };
 
-type PlaceOrderResult = { ok: true; orderNumber: string; paystackAuthorizationUrl?: string } | { ok: false; error: string };
+type PlaceOrderResult = { ok: true; orderNumber: string; flutterwavePaymentLink?: string } | { ok: false; error: string };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
   const store = await prisma.store.findFirst({ where: { id: input.storeId, isPublished: true } });
@@ -124,15 +124,18 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       return created;
     });
 
-    if (input.paymentMethod === "PAYSTACK") {
+    if (input.paymentMethod === "FLUTTERWAVE") {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
       const result = await initializeTransaction({
         email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storebuilder.ng`,
-        amountKobo: Math.round(total * 100),
-        reference: order.orderNumber,
-        callbackUrl: `${appUrl}/shop/${store.slug}/order/${order.orderNumber}`,
-        subaccountCode: store.paystackSubaccountCode,
-        metadata: { storeId: store.id, orderId: order.id },
+        name: input.customer.name,
+        phone: input.customer.phone,
+        amount: total,
+        currency: store.currency,
+        txRef: order.orderNumber,
+        redirectUrl: `${appUrl}/shop/${store.slug}/order/${order.orderNumber}`,
+        subaccountId: store.flutterwaveSubaccountId,
+        storeName: store.name,
       });
 
       if (!result.ok) {
@@ -141,8 +144,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         return { ok: false, error: result.error };
       }
 
-      await prisma.order.update({ where: { id: order.id }, data: { paystackReference: order.orderNumber } });
-      return { ok: true, orderNumber: order.orderNumber, paystackAuthorizationUrl: result.authorizationUrl };
+      await prisma.order.update({ where: { id: order.id }, data: { flutterwaveTxRef: order.orderNumber } });
+      return { ok: true, orderNumber: order.orderNumber, flutterwavePaymentLink: result.paymentLink };
     }
 
     // Bank transfer / cash on delivery: order is PENDING until the seller confirms manually.

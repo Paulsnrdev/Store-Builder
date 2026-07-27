@@ -73,7 +73,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <h2 className="text-sm font-semibold text-gray-900">Payment</h2>
           <p className="mt-2 text-sm text-gray-700">{paymentMethodLabel[order.paymentMethod]}</p>
-          {order.paystackReference && <p className="text-xs text-gray-400">Ref: {order.paystackReference}</p>}
+          {order.flutterwaveTxRef && <p className="text-xs text-gray-400">Ref: {order.flutterwaveTxRef}</p>}
           {order.trackingNote && (
             <>
               <h2 className="mt-3 text-sm font-semibold text-gray-900">Tracking note</h2>

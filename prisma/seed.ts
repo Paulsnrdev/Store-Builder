@@ -342,7 +342,7 @@ async function main() {
       shippingCost: 1500,
       discount: 0,
       total: 11000,
-      paymentMethod: PaymentMethod.PAYSTACK,
+      paymentMethod: PaymentMethod.FLUTTERWAVE,
       shippingAddress: { label: "Home", address: "5 Admiralty Way, Lekki Phase 1, Lagos", state: "Lagos" },
       paidAt: new Date(),
       items: {

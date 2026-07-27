@@ -33,7 +33,7 @@ export function OrderActions({ orderId, status, paymentMethod }: Props) {
     });
   }
 
-  const canMarkPaid = status === "PENDING" && paymentMethod !== "PAYSTACK";
+  const canMarkPaid = status === "PENDING" && paymentMethod !== "FLUTTERWAVE";
   const canMarkProcessing = status === "PAID";
   const canMarkShipped = status === "PAID" || status === "PROCESSING";
   const canMarkDelivered = status === "SHIPPED";

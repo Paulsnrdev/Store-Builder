@@ -13,7 +13,7 @@ type Initial = {
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
-  paystackSubaccountCode: string | null;
+  flutterwaveSubaccountId: string | null;
   isPublished: boolean;
   slug: string;
 };
@@ -104,12 +104,12 @@ export function SettingsForm({ initial }: { initial: Initial }) {
       </fieldset>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Paystack subaccount code</label>
-        <p className="mb-1 text-xs text-gray-400">From your Paystack dashboard — routes card payments directly to you.</p>
+        <label className="block text-sm font-medium text-gray-700">Flutterwave subaccount ID</label>
+        <p className="mb-1 text-xs text-gray-400">From your Flutterwave dashboard — routes card payments directly to you.</p>
         <input
-          name="paystackSubaccountCode"
-          defaultValue={initial.paystackSubaccountCode ?? ""}
-          placeholder="ACCT_xxxxxxxx"
+          name="flutterwaveSubaccountId"
+          defaultValue={initial.flutterwaveSubaccountId ?? ""}
+          placeholder="RS_xxxxxxxx"
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
       </div>

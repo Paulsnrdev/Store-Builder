@@ -5,7 +5,7 @@ import { getCurrentStore } from "@/lib/store";
 import { orderStatusLabel, orderStatusClass, paymentMethodLabel } from "@/lib/order-status-display";
 
 const STATUSES = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
-const PAYMENT_METHODS = ["PAYSTACK", "BANK_TRANSFER", "CASH_ON_DELIVERY"];
+const PAYMENT_METHODS = ["FLUTTERWAVE", "BANK_TRANSFER", "CASH_ON_DELIVERY"];
 
 export default async function OrdersPage({
   searchParams,

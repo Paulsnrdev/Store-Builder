@@ -51,7 +51,7 @@ export function sellerOrderPendingEmail(data: OrderEmailData, paymentMethodLabel
   };
 }
 
-/** Paystack: payment confirmed via webhook. */
+/** Flutterwave: payment confirmed via webhook. */
 export function customerOrderPaidEmail(data: OrderEmailData) {
   return {
     subject: `Payment received for order ${data.orderNumber} — ${data.storeName}`,

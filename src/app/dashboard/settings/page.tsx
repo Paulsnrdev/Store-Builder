@@ -19,7 +19,7 @@ export default async function SettingsPage() {
             bankName: store.bankName,
             bankAccountNumber: store.bankAccountNumber,
             bankAccountName: store.bankAccountName,
-            paystackSubaccountCode: store.paystackSubaccountCode,
+            flutterwaveSubaccountId: store.flutterwaveSubaccountId,
             isPublished: store.isPublished,
             slug: store.slug,
           }}

@@ -19,7 +19,7 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
   const [address, setAddress] = useState("");
   const [state, setState] = useState("");
   const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"PAYSTACK" | "BANK_TRANSFER" | "CASH_ON_DELIVERY">("PAYSTACK");
+  const [paymentMethod, setPaymentMethod] = useState<"FLUTTERWAVE" | "BANK_TRANSFER" | "CASH_ON_DELIVERY">("FLUTTERWAVE");
 
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState<{ code: string; amount: number } | null>(null);
@@ -68,8 +68,8 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
       }
 
       clear();
-      if (result.paystackAuthorizationUrl) {
-        window.location.href = result.paystackAuthorizationUrl;
+      if (result.flutterwavePaymentLink) {
+        window.location.href = result.flutterwavePaymentLink;
       } else {
         router.push(`/shop/${storeSlug}/order/${result.orderNumber}`);
       }
@@ -148,7 +148,7 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
           <h2 className="text-sm font-medium text-gray-700">Payment method</h2>
           <div className="mt-2 space-y-2">
             {[
-              { value: "PAYSTACK", label: "Pay with card (Paystack)" },
+              { value: "FLUTTERWAVE", label: "Pay with card (Flutterwave)" },
               { value: "BANK_TRANSFER", label: "Bank transfer" },
               { value: "CASH_ON_DELIVERY", label: "Cash on delivery" },
             ].map((opt) => (

@@ -19,7 +19,7 @@ export const orderStatusClass: Record<string, string> = {
 };
 
 export const paymentMethodLabel: Record<string, string> = {
-  PAYSTACK: "Paystack",
+  FLUTTERWAVE: "Flutterwave",
   BANK_TRANSFER: "Bank transfer",
   CASH_ON_DELIVERY: "Cash on delivery",
 };
