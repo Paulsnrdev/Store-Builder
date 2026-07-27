@@ -239,15 +239,17 @@ model Order {
   paystackReference String?       @unique
   shippingAddress   Json
   customerNote      String?
+  trackingNote      String?
 
   store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
   customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
   items    OrderItem[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  paidAt    DateTime?
-  shippedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  paidAt      DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
 
   @@unique([storeId, orderNumber])
   @@index([storeId])

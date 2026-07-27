@@ -81,3 +81,10 @@ npm test
 - A seller's Paystack subaccount `percentage_charge` (set on Paystack's dashboard when the subaccount is created) governs the platform-fee split — there's no separate fee field in this app yet. That lands with subscription plan billing in a later phase.
 
 The demo store (`chunkz`) seeds 12 products across 3 categories (some with size/colour variants), 3 shipping zones, a discount code, a customer, and a paid order. Demo login: `demo@storebuilder.ng` / `password123`.
+
+## Order management
+
+- `/dashboard/orders` — list with search (order number, customer name/phone) and filters (status, payment method); `/dashboard/orders/[id]` — detail view with a status timeline, seller actions, and a print-friendly invoice at `/dashboard/orders/[id]/print`.
+- Status transitions are guarded server-side (`src/lib/actions/order-management.ts`), not just hidden in the UI: e.g. "Mark as paid" only applies to `PENDING` bank-transfer/COD orders (Paystack orders are confirmed exclusively by the webhook), "Mark as shipped" only applies from `PAID`/`PROCESSING`, and cancel/refund restore reserved stock via the same `restoreStock` used elsewhere.
+- `/dashboard/customers` and `/dashboard/customers/[id]` compute order count and total spent live from the `Order` table (summing non-pending, non-cancelled, non-refunded orders) rather than from `Customer.totalOrders`/`totalSpent`, which are unused legacy columns nothing currently writes to.
+- Dashboard home (`/dashboard`) shows today's orders, revenue this month, orders needing action, low-stock alerts, and a 30-day revenue chart. The chart buckets `paidAt` by local calendar day on both sides (a helper, not `Date#toISOString`, which is UTC and silently misaligns "today" for any server timezone ahead of UTC — this broke revenue-chart lookups for Nigeria-based deployments during testing and is documented here so it doesn't regress).
