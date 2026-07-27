@@ -78,7 +78,7 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
 
       <Link
         href={`/shop/${slug}/checkout`}
-        className="mt-4 block w-full rounded-md bg-gray-900 px-4 py-3 text-center text-sm font-medium text-white"
+        className="mt-4 block w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-center text-sm font-medium text-white"
       >
         Checkout
       </Link>

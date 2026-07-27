@@ -22,6 +22,7 @@ Copy `.env.example` to `.env` and fill in real values. See "Accounts to create" 
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — product images.
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — order emails. Without a verified sending domain, use the `onboarding@resend.dev` default.
 - `FLUTTERWAVE_SECRET_KEY` — checkout and subaccount splits (server-to-server only; the redirect-based flow used here needs no public/client key). `FLUTTERWAVE_SECRET_HASH` — a secret string you set yourself in the Flutterwave dashboard's webhook settings; the webhook handler checks the `verif-hash` header against it. Point a Flutterwave webhook at `/api/webhooks/flutterwave` (events: `charge.completed`).
+- `NEXT_PUBLIC_APP_URL` — the site's own base URL (e.g. `https://yourdomain.com` in production). Used to build Flutterwave redirect URLs and canonical/Open Graph URLs. Defaults to `http://localhost:3000` if unset.
 
 ## Accounts to create
 
@@ -89,3 +90,32 @@ The demo store (`chunkz`) seeds 12 products across 3 categories (some with size/
 - Status transitions are guarded server-side (`src/lib/actions/order-management.ts`), not just hidden in the UI: e.g. "Mark as paid" only applies to `PENDING` bank-transfer/COD orders (Flutterwave orders are confirmed exclusively by the webhook), "Mark as shipped" only applies from `PAID`/`PROCESSING`, and cancel/refund restore reserved stock via the same `restoreStock` used elsewhere.
 - `/dashboard/customers` and `/dashboard/customers/[id]` compute order count and total spent live from the `Order` table (summing non-pending, non-cancelled, non-refunded orders) rather than from `Customer.totalOrders`/`totalSpent`, which are unused legacy columns nothing currently writes to.
 - Dashboard home (`/dashboard`) shows today's orders, revenue this month, orders needing action, low-stock alerts, and a 30-day revenue chart. The chart buckets `paidAt` by local calendar day on both sides (a helper, not `Date#toISOString`, which is UTC and silently misaligns "today" for any server timezone ahead of UTC — this broke revenue-chart lookups for Nigeria-based deployments during testing and is documented here so it doesn't regress).
+
+## Store customization and shipping
+
+- `/dashboard/settings` — branding (logo, banner, accent color, font), announcement bar, social links, about text, contact/bank details, and the publish toggle all live on one page. Accent color and font are applied storefront-wide via CSS custom properties set in `src/app/shop/[slug]/layout.tsx` (`--store-primary`), so primary CTA buttons pick up a seller's brand color without per-component theme plumbing.
+- `/dashboard/shipping` — CRUD for shipping zones (name, a set of Nigerian states, a flat rate, an optional free-shipping threshold). A state not covered by any zone ships free by default, matching the existing checkout behavior in `src/lib/actions/orders.ts`.
+- The marketing homepage at `/` and storefront pages (`/shop/[slug]`, `/product/[productSlug]`, `/category/[categorySlug]`) carry per-page `<title>`/description metadata and JSON-LD (`Store`/`Product` schema) for SEO and link-preview cards.
+
+## Launch checklist
+
+Before pointing a seller's domain at this in production:
+
+- [ ] All env vars in `.env.example` are set in Vercel's project settings (Production environment) — `DATABASE_URL`/`DIRECT_URL`, `AUTH_SECRET`/`AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`/`AUTH_URL`, `CLOUDINARY_*`, `RESEND_API_KEY`/`RESEND_FROM_EMAIL`, `FLUTTERWAVE_SECRET_KEY`/`FLUTTERWAVE_SECRET_HASH`, `NEXT_PUBLIC_APP_URL` (set to the real production URL, not localhost).
+- [ ] `AUTH_URL` matches the production domain exactly (Auth.js redirects break otherwise).
+- [ ] Flutterwave dashboard webhook is pointed at `https://<domain>/api/webhooks/flutterwave` with the `charge.completed` event, and the webhook secret hash there matches `FLUTTERWAVE_SECRET_HASH`.
+- [ ] Resend has a verified sending domain (the `onboarding@resend.dev` default won't deliver to arbitrary recipients).
+- [ ] `npx prisma migrate resolve` history is in sync — run `npx prisma migrate status` against `DIRECT_URL` and confirm no pending migrations before deploying.
+- [ ] No local build/deploy step runs `prisma migrate dev`, `db push`, or anything touching `--shadow-database-url` against the production database (see the migration workaround above).
+
+No project-specific `vercel.json` is needed — this is a standard Next.js App Router project and Vercel's Next.js preset (build command `next build`, output `.next`) works unmodified. `src/generated/prisma` (the Prisma client output) is gitignored, so a fresh deploy regenerates it via the `postinstall` script (`prisma generate`) before `next build` runs — `DATABASE_URL`/`DIRECT_URL` must be set in Vercel's env vars for that step to succeed.
+
+**Manual test script** (run through this after any change touching checkout, payments, or order status):
+1. Browse a published store's storefront on mobile viewport: home → category → product → add to cart → cart.
+2. Checkout with **bank transfer**: place the order, confirm the order-confirmation page shows bank details, confirm the seller and customer both receive the "order received" email (if Resend is configured).
+3. In the dashboard, find that order and click **Mark as paid**, then **Mark as processing**, **Mark as shipped** (with a tracking note), **Mark as delivered** — confirm the status timeline updates at each step and the tracking note persists.
+4. Place a second order and **Cancel** it from PENDING — confirm the reserved stock count goes back up on the product page.
+5. Checkout with **Flutterwave** using real test-mode keys: confirm the redirect to Flutterwave's hosted page happens, complete a test payment, and confirm the order flips to PAID only after the webhook fires (not immediately on redirect back).
+6. Try to buy the last unit of a low-stock product from two browser tabs at once — confirm only one checkout succeeds and the other sees a clear "out of stock" error.
+7. In `/dashboard/settings`, change the accent color and upload a banner — confirm the storefront's primary buttons and home page hero reflect the change after a refresh.
+8. In `/dashboard/shipping`, add a zone covering one state with a flat rate — confirm checkout shows that rate for an address in that state, and free shipping (₦0) for a state not covered by any zone.

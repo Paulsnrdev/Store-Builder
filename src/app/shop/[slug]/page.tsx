@@ -1,9 +1,28 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getPublishedStore } from "@/lib/storefront";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/storefront/product-card";
 import { isProductOutOfStock } from "@/lib/inventory-status";
+import { appUrl, jsonLd, truncate } from "@/lib/seo";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const store = await getPublishedStore(slug);
+  const description = store.description ? truncate(store.description, 160) : `Shop ${store.name} online.`;
+
+  return {
+    title: store.name,
+    description,
+    openGraph: {
+      title: store.name,
+      description,
+      url: `${appUrl()}/shop/${store.slug}`,
+      images: store.bannerUrl ? [store.bannerUrl] : store.logoUrl ? [store.logoUrl] : [],
+    },
+  };
+}
 
 export default async function StorefrontHomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -26,6 +45,18 @@ export default async function StorefrontHomePage({ params }: { params: Promise<{
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLd({
+          "@context": "https://schema.org",
+          "@type": "Store",
+          name: store.name,
+          description: store.description ?? undefined,
+          url: `${appUrl()}/shop/${store.slug}`,
+          logo: store.logoUrl ?? undefined,
+          telephone: store.phone ?? undefined,
+        })}
+      />
       {store.bannerUrl && (
         <div className="relative h-40 w-full sm:h-64">
           <Image src={store.bannerUrl} alt={store.name} fill priority sizes="100vw" className="object-cover" />

@@ -83,6 +83,9 @@ model Store {
   address                 String?
   currency                String  @default("NGN")
   theme                   Json?
+  socialLinks             Json?
+  announcementText        String?
+  announcementEnabled     Boolean @default(false)
   isPublished             Boolean @default(false)
   flutterwaveSubaccountId String?
   bankAccountVerified     Boolean @default(false)

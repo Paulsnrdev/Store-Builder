@@ -1,9 +1,23 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublishedStore } from "@/lib/storefront";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { ProductCard } from "@/components/storefront/product-card";
 import { isProductOutOfStock } from "@/lib/inventory-status";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; categorySlug: string }>;
+}): Promise<Metadata> {
+  const { slug, categorySlug } = await params;
+  const store = await getPublishedStore(slug);
+  const category = await prisma.category.findFirst({ where: { storeId: store.id, slug: categorySlug } });
+  if (!category) return {};
+
+  return { title: `${category.name} — ${store.name}`, description: `Shop ${category.name} at ${store.name}.` };
+}
 
 const SORT_OPTIONS: Record<string, Prisma.ProductOrderByWithRelationInput> = {
   newest: { createdAt: "desc" },

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublishedStore } from "@/lib/storefront";
 import { prisma } from "@/lib/prisma";
@@ -5,6 +6,34 @@ import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ProductOptions } from "@/components/storefront/product-options";
 import { ProductCard } from "@/components/storefront/product-card";
 import { isProductOutOfStock } from "@/lib/inventory-status";
+import { appUrl, jsonLd, stripHtml, truncate } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; productSlug: string }>;
+}): Promise<Metadata> {
+  const { slug, productSlug } = await params;
+  const store = await getPublishedStore(slug);
+  const product = await prisma.product.findFirst({
+    where: { storeId: store.id, slug: productSlug, isActive: true },
+    include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+  });
+  if (!product) return {};
+
+  const description = product.description ? truncate(stripHtml(product.description), 160) : `${product.name} at ${store.name}.`;
+
+  return {
+    title: `${product.name} — ${store.name}`,
+    description,
+    openGraph: {
+      title: product.name,
+      description,
+      url: `${appUrl()}/shop/${store.slug}/product/${product.slug}`,
+      images: product.images[0] ? [product.images[0].url] : [],
+    },
+  };
+}
 
 export default async function ProductPage({
   params,
@@ -32,8 +61,27 @@ export default async function ProductPage({
       })
     : [];
 
+  const outOfStock = isProductOutOfStock(product);
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLd({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description ? stripHtml(product.description) : undefined,
+          image: product.images.map((i) => i.url),
+          offers: {
+            "@type": "Offer",
+            url: `${appUrl()}/shop/${store.slug}/product/${product.slug}`,
+            priceCurrency: store.currency,
+            price: product.price.toString(),
+            availability: outOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+          },
+        })}
+      />
       <div className="grid gap-6 sm:grid-cols-2">
         <ProductGallery images={product.images.map((i) => i.url)} name={product.name} />
 

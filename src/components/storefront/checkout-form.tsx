@@ -226,7 +226,7 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
           <button
             type="submit"
             disabled={placing || !state || (!!state && !zone)}
-            className="mt-4 w-full rounded-md bg-gray-900 px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
+            className="mt-4 w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
           >
             {placing ? "Placing order..." : "Place order"}
           </button>

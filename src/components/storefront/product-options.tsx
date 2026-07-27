@@ -135,7 +135,7 @@ export function ProductOptions({
         type="button"
         onClick={handleAddToCart}
         disabled={!canAddToCart}
-        className="mt-4 w-full rounded-md bg-gray-900 px-4 py-3 text-sm font-medium text-white disabled:opacity-40"
+        className="mt-4 w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-sm font-medium text-white disabled:opacity-40"
       >
         {!hasVariants && maxQuantity <= 0
           ? "Out of stock"

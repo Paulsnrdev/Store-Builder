@@ -12,6 +12,16 @@ const settingsSchema = z.object({
   email: z.string().email().nullable().or(z.literal("")).optional(),
   address: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
+  bannerUrl: z.string().nullable().optional(),
+  themeColor: z.string().nullable().optional(),
+  themeFont: z.string().nullable().optional(),
+  socialInstagram: z.string().nullable().optional(),
+  socialFacebook: z.string().nullable().optional(),
+  socialTwitter: z.string().nullable().optional(),
+  socialTiktok: z.string().nullable().optional(),
+  announcementText: z.string().nullable().optional(),
+  announcementEnabled: z.coerce.boolean().default(false),
   bankName: z.string().nullable().optional(),
   bankAccountNumber: z.string().nullable().optional(),
   bankAccountName: z.string().nullable().optional(),
@@ -31,6 +41,16 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
     email: formData.get("email") || null,
     address: formData.get("address") || null,
     description: formData.get("description") || null,
+    logoUrl: formData.get("logoUrl") || null,
+    bannerUrl: formData.get("bannerUrl") || null,
+    themeColor: formData.get("themeColor") || null,
+    themeFont: formData.get("themeFont") || null,
+    socialInstagram: formData.get("socialInstagram") || null,
+    socialFacebook: formData.get("socialFacebook") || null,
+    socialTwitter: formData.get("socialTwitter") || null,
+    socialTiktok: formData.get("socialTiktok") || null,
+    announcementText: formData.get("announcementText") || null,
+    announcementEnabled: formData.get("announcementEnabled") === "on",
     bankName: formData.get("bankName") || null,
     bankAccountNumber: formData.get("bankAccountNumber") || null,
     bankAccountName: formData.get("bankAccountName") || null,
@@ -38,9 +58,37 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
     isPublished: formData.get("isPublished") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  const data = parsed.data;
 
-  await prisma.store.update({ where: { id: store.id }, data: parsed.data });
+  await prisma.store.update({
+    where: { id: store.id },
+    data: {
+      name: data.name,
+      phone: data.phone,
+      whatsappNumber: data.whatsappNumber,
+      email: data.email,
+      address: data.address,
+      description: data.description,
+      logoUrl: data.logoUrl,
+      bannerUrl: data.bannerUrl,
+      theme: { color: data.themeColor || undefined, font: data.themeFont || undefined },
+      socialLinks: {
+        instagram: data.socialInstagram || undefined,
+        facebook: data.socialFacebook || undefined,
+        twitter: data.socialTwitter || undefined,
+        tiktok: data.socialTiktok || undefined,
+      },
+      announcementText: data.announcementText,
+      announcementEnabled: data.announcementEnabled,
+      bankName: data.bankName,
+      bankAccountNumber: data.bankAccountNumber,
+      bankAccountName: data.bankAccountName,
+      flutterwaveSubaccountId: data.flutterwaveSubaccountId,
+      isPublished: data.isPublished,
+    },
+  });
 
   revalidatePath("/dashboard/settings");
+  revalidatePath(`/shop/${store.slug}`, "layout");
   return { success: true };
 }
