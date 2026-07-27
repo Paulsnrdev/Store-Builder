@@ -98,6 +98,7 @@ model Store {
   orders        Order[]
   shippingZones ShippingZone[]
   discounts     Discount[]
+  carts         Cart[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -182,6 +183,25 @@ model ProductVariant {
   orderItems OrderItem[]
 
   @@index([productId])
+}
+
+// A cross-device cart, keyed by phone number so a customer can pick up the
+// same cart on a different device without creating an account. Items are
+// stored as a JSON snapshot (id/qty/display fields) rather than relations —
+// carts are ephemeral and always re-validated against live product data at
+// checkout, so there's no need for referential integrity here.
+model Cart {
+  id      String @id @default(cuid())
+  storeId String
+  phone   String
+  items   Json
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([storeId, phone])
 }
 
 model Customer {

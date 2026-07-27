@@ -13,7 +13,7 @@ export default async function StorefrontLayout({
   const store = await getPublishedStore(slug);
 
   return (
-    <CartProvider storeSlug={store.slug}>
+    <CartProvider storeId={store.id} storeSlug={store.slug}>
       <div className="flex min-h-screen flex-col bg-white">
         <StorefrontHeader storeSlug={store.slug} storeName={store.name} logoUrl={store.logoUrl} />
         <main className="flex-1">{children}</main>

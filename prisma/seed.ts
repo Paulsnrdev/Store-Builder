@@ -30,6 +30,9 @@ async function main() {
       address: "12 Allen Avenue, Ikeja, Lagos",
       currency: "NGN",
       isPublished: true,
+      bankName: "GTBank",
+      bankAccountNumber: "0123456789",
+      bankAccountName: "Chunkz Store",
       theme: { primaryColor: "#111827", font: "Inter" },
     },
   });

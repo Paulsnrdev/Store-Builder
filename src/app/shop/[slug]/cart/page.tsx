@@ -4,6 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart, cartItemKey } from "@/components/storefront/cart-context";
+import { CartSyncControl } from "@/components/storefront/cart-sync-control";
 
 export default function CartPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -13,7 +14,10 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="text-gray-500">Your cart is empty.</p>
-        <Link href={`/shop/${slug}`} className="mt-4 inline-block text-sm font-medium text-gray-900 underline">
+        <div className="mx-auto mt-6 max-w-sm text-left">
+          <CartSyncControl />
+        </div>
+        <Link href={`/shop/${slug}`} className="mt-2 inline-block text-sm font-medium text-gray-900 underline">
           Continue shopping
         </Link>
       </div>
@@ -23,6 +27,8 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="mb-4 text-xl font-semibold text-gray-900">Your cart</h1>
+
+      <CartSyncControl />
 
       <div className="divide-y divide-gray-100 border-y border-gray-100">
         {items.map((item) => {

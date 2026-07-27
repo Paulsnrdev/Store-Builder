@@ -47,14 +47,23 @@ npx prisma studio          # browse data
 **Note on Supabase + Prisma:** `npx prisma migrate dev` hangs against Supabase's pooled connection — PgBouncer transaction-mode pooling doesn't support the shadow database Prisma's schema engine creates to diff migrations. `DIRECT_URL` (port 5432, session mode) is configured in both `prisma/schema.prisma` and `prisma.config.ts` so `migrate status`/`migrate resolve` at least bypass the pooler, but for *new* migrations use this workaround instead of `migrate dev`:
 
 ```bash
+# 1. Get the previous schema version (before your edit) from git — diffing
+#    two schema FILES needs no shadow database and touches no live DB at all.
+git show HEAD:prisma/schema.prisma > /tmp/prev-schema.prisma
+
+# 2. Generate the SQL delta purely from those two files.
 ts=$(date +%Y%m%d%H%M%S) && dir="prisma/migrations/${ts}_your_migration_name" && mkdir -p "$dir"
-npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma \
-  --shadow-database-url "$DIRECT_URL" --script > "$dir/migration.sql"   # generates SQL, no live DB needed
-npx prisma db execute --file "$dir/migration.sql" --url "$DIRECT_URL"   # applies it
-npx prisma migrate resolve --applied "${ts}_your_migration_name"        # records it as applied
+npx prisma migrate diff --from-schema-datamodel /tmp/prev-schema.prisma --to-schema-datamodel prisma/schema.prisma \
+  --script > "$dir/migration.sql"
+
+# 3. Apply it and record it as applied.
+npx prisma db execute --file "$dir/migration.sql" --url "$DIRECT_URL"
+npx prisma migrate resolve --applied "${ts}_your_migration_name"
 ```
 
 Set `CHECKPOINT_DISABLE=1` on any `prisma` command — its update-check network call can hang on some networks.
+
+**⚠️ Never pass `--shadow-database-url` (or `--from-migrations`, which requires one) pointed at `DIRECT_URL` or `DATABASE_URL`.** Prisma treats the shadow database as disposable scratch space — it wipes it and replays the full migration history into it to compute the diff. Pointing that at the real database wiped all data (schema intact, every row gone) twice during development before this was caught. The file-to-file diff above (`--from-schema-datamodel` on both sides) needs no database connection and cannot do this.
 
 ## Testing
 
