@@ -1,0 +1,179 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { priceCartItems, type CartItemRequest } from "@/lib/order-pricing";
+import { reserveStock, InsufficientStockError } from "@/lib/inventory";
+import { validateDiscountCode } from "@/lib/discounts";
+import { randomOrderNumber } from "@/lib/order-number";
+import { initializeTransaction } from "@/lib/paystack";
+import { sendEmail } from "@/lib/email";
+import { customerOrderPendingEmail, sellerOrderPendingEmail } from "@/lib/email-templates";
+
+type PlaceOrderInput = {
+  storeId: string;
+  items: CartItemRequest[];
+  customer: { name: string; phone: string; email?: string };
+  shippingAddress: { address: string; state: string };
+  paymentMethod: "PAYSTACK" | "BANK_TRANSFER" | "CASH_ON_DELIVERY";
+  discountCode?: string;
+  customerNote?: string;
+};
+
+type PlaceOrderResult = { ok: true; orderNumber: string; paystackAuthorizationUrl?: string } | { ok: false; error: string };
+
+export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
+  const store = await prisma.store.findFirst({ where: { id: input.storeId, isPublished: true } });
+  if (!store) return { ok: false, error: "Store not found." };
+
+  if (!input.customer.name.trim() || !input.customer.phone.trim()) {
+    return { ok: false, error: "Name and phone are required." };
+  }
+  if (!input.shippingAddress.address.trim() || !input.shippingAddress.state.trim()) {
+    return { ok: false, error: "Shipping address is required." };
+  }
+
+  const productIds = [...new Set(input.items.map((i) => i.productId))];
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds }, storeId: store.id },
+    include: { variants: true },
+  });
+  const productMap = new Map(
+    products.map((p) => [
+      p.id,
+      {
+        id: p.id,
+        name: p.name,
+        price: Number(p.price),
+        isActive: p.isActive,
+        trackInventory: p.trackInventory,
+        stockQuantity: p.stockQuantity,
+        variants: p.variants.map((v) => ({ id: v.id, name: v.name, price: v.price ? Number(v.price) : null, stockQuantity: v.stockQuantity })),
+      },
+    ])
+  );
+
+  const priced = priceCartItems(input.items, productMap);
+  if (!priced.ok) return { ok: false, error: priced.error };
+
+  // Shipping cost is recomputed server-side from the store's zones — never trust a client-supplied amount.
+  const zone = await prisma.shippingZone.findFirst({ where: { storeId: store.id, states: { has: input.shippingAddress.state } } });
+  const shippingCost = zone ? (zone.freeAbove && priced.subtotal >= Number(zone.freeAbove) ? 0 : Number(zone.rate)) : 0;
+
+  let discountAmount = 0;
+  let discountId: string | null = null;
+  let discountCode: string | null = null;
+  if (input.discountCode) {
+    const discountResult = await validateDiscountCode(store.id, input.discountCode, priced.subtotal);
+    if (!discountResult.ok) return { ok: false, error: discountResult.error };
+    discountAmount = discountResult.amount;
+    discountId = discountResult.discountId;
+    discountCode = discountResult.code;
+  }
+
+  const total = Math.max(priced.subtotal + shippingCost - discountAmount, 0);
+
+  try {
+    const order = await prisma.$transaction(async (tx) => {
+      await reserveStock(tx, priced.lineItems);
+
+      const customer = await tx.customer.upsert({
+        where: { storeId_phone: { storeId: store.id, phone: input.customer.phone } },
+        update: { name: input.customer.name, email: input.customer.email },
+        create: { storeId: store.id, name: input.customer.name, phone: input.customer.phone, email: input.customer.email },
+      });
+
+      let orderNumber = randomOrderNumber();
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const clash = await tx.order.findFirst({ where: { storeId: store.id, orderNumber } });
+        if (!clash) break;
+        orderNumber = randomOrderNumber();
+      }
+
+      const created = await tx.order.create({
+        data: {
+          storeId: store.id,
+          customerId: customer.id,
+          orderNumber,
+          status: "PENDING",
+          subtotal: priced.subtotal,
+          shippingCost,
+          discount: discountAmount,
+          discountCode,
+          total,
+          paymentMethod: input.paymentMethod,
+          shippingAddress: input.shippingAddress,
+          customerNote: input.customerNote,
+          items: {
+            create: priced.lineItems.map((item) => ({
+              productId: item.productId,
+              variantId: item.variantId,
+              productName: item.productName,
+              variantName: item.variantName,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+            })),
+          },
+        },
+      });
+
+      if (discountId) {
+        await tx.discount.update({ where: { id: discountId }, data: { usageCount: { increment: 1 } } });
+      }
+
+      return created;
+    });
+
+    if (input.paymentMethod === "PAYSTACK") {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const result = await initializeTransaction({
+        email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storebuilder.ng`,
+        amountKobo: Math.round(total * 100),
+        reference: order.orderNumber,
+        callbackUrl: `${appUrl}/shop/${store.slug}/order/${order.orderNumber}`,
+        subaccountCode: store.paystackSubaccountCode,
+        metadata: { storeId: store.id, orderId: order.id },
+      });
+
+      if (!result.ok) {
+        // Payment couldn't start — leave the order PENDING (bank transfer/COD are still valid fallbacks)
+        // rather than losing the reservation, and surface the error so the buyer can retry or pick another method.
+        return { ok: false, error: result.error };
+      }
+
+      await prisma.order.update({ where: { id: order.id }, data: { paystackReference: order.orderNumber } });
+      return { ok: true, orderNumber: order.orderNumber, paystackAuthorizationUrl: result.authorizationUrl };
+    }
+
+    // Bank transfer / cash on delivery: order is PENDING until the seller confirms manually.
+    const emailData = {
+      storeName: store.name,
+      orderNumber: order.orderNumber,
+      customerName: input.customer.name,
+      total,
+      items: priced.lineItems,
+    };
+    const paymentMethodLabel = input.paymentMethod === "BANK_TRANSFER" ? "bank transfer" : "cash on delivery";
+    const paymentInstructions =
+      input.paymentMethod === "BANK_TRANSFER"
+        ? store.bankName && store.bankAccountNumber
+          ? `Please transfer ₦${total.toLocaleString()} to ${store.bankName}, account number ${store.bankAccountNumber} (${store.bankAccountName ?? store.name}). We'll confirm your order once payment is received.`
+          : `We'll be in touch with bank transfer details shortly.`
+        : `Please have ₦${total.toLocaleString()} ready for the courier on delivery.`;
+
+    if (store.email) {
+      await sendEmail({ to: store.email, ...sellerOrderPendingEmail(emailData, paymentMethodLabel) });
+    }
+    if (input.customer.email) {
+      await sendEmail({ to: input.customer.email, ...customerOrderPendingEmail(emailData, paymentInstructions) });
+    }
+
+    return { ok: true, orderNumber: order.orderNumber };
+  } catch (err) {
+    if (err instanceof InsufficientStockError) {
+      return { ok: false, error: err.message };
+    }
+    console.error("Order creation failed:", err);
+    return { ok: false, error: "Something went wrong placing your order. Please try again." };
+  }
+}

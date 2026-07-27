@@ -86,6 +86,9 @@ model Store {
   isPublished            Boolean @default(false)
   paystackSubaccountCode String?
   bankAccountVerified    Boolean @default(false)
+  bankName               String?
+  bankAccountNumber      String?
+  bankAccountName        String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

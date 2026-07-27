@@ -22,3 +22,15 @@ export const stockStatusClass: Record<StockStatus, string> = {
   "low-stock": "bg-amber-100 text-amber-700",
   "in-stock": "bg-green-100 text-green-700",
 };
+
+export function isProductOutOfStock(product: {
+  trackInventory: boolean;
+  stockQuantity: number;
+  variants: { stockQuantity: number }[];
+}): boolean {
+  if (product.variants.length > 0) {
+    return product.variants.every((v) => v.stockQuantity <= 0);
+  }
+  if (!product.trackInventory) return false;
+  return product.stockQuantity <= 0;
+}
