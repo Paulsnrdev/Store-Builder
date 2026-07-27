@@ -3,7 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { ProductsTable, type ProductRow } from "@/components/dashboard/products-table";
-import { LOW_STOCK_THRESHOLD } from "@/lib/inventory-status";
+import { getStockStatus } from "@/lib/inventory-status";
 
 export default async function ProductsPage({
   searchParams,
@@ -18,30 +18,44 @@ export default async function ProductsPage({
     ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { sku: { contains: q, mode: "insensitive" } }] } : {}),
     ...(category ? { categoryId: category } : {}),
     ...(status === "active" ? { isActive: true } : status === "draft" ? { isActive: false } : {}),
-    ...(stock === "out" ? { trackInventory: true, stockQuantity: { lte: 0 } } : {}),
-    ...(stock === "low" ? { trackInventory: true, stockQuantity: { gt: 0, lte: LOW_STOCK_THRESHOLD } } : {}),
   };
 
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
       where,
-      include: { category: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: "asc" }, take: 1 },
+        variants: { select: { stockQuantity: true } },
+      },
       orderBy: { createdAt: "desc" },
     }),
     prisma.category.findMany({ where: { storeId: store.id }, orderBy: { sortOrder: "asc" } }),
   ]);
 
-  const rows: ProductRow[] = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    sku: p.sku,
-    price: p.price.toString(),
-    isActive: p.isActive,
-    trackInventory: p.trackInventory,
-    stockQuantity: p.stockQuantity,
-    categoryName: p.category?.name ?? null,
-    imageUrl: p.images[0]?.url ?? null,
-  }));
+  const rows: ProductRow[] = products
+    .map((p) => {
+      // Variant-having products track stock per variant, not on the product itself.
+      const effectiveStock = p.variants.length > 0 ? p.variants.reduce((sum, v) => sum + v.stockQuantity, 0) : p.stockQuantity;
+      return {
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: p.price.toString(),
+        isActive: p.isActive,
+        trackInventory: p.trackInventory,
+        stockQuantity: effectiveStock,
+        categoryName: p.category?.name ?? null,
+        imageUrl: p.images[0]?.url ?? null,
+      };
+    })
+    .filter((row) => {
+      if (!stock) return true;
+      const stockStatus = getStockStatus(row.trackInventory, row.stockQuantity);
+      if (stock === "out") return stockStatus === "out-of-stock";
+      if (stock === "low") return stockStatus === "low-stock";
+      return true;
+    });
 
   return (
     <div>

@@ -94,7 +94,7 @@ async function main() {
       costPrice: 12000,
       sku: "HD-001",
       isFeatured: true,
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/hoodie-1.jpg"],
+      images: [],
       variants: sizeColorVariants(["S", "M", "L", "XL"], ["Black", "Grey"], 25000),
     },
     {
@@ -105,7 +105,7 @@ async function main() {
       price: 32000,
       costPrice: 16000,
       sku: "HD-002",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/hoodie-2.jpg"],
+      images: [],
       variants: sizeColorVariants(["M", "L", "XL"], ["Black", "Navy"], 32000),
     },
     {
@@ -116,7 +116,7 @@ async function main() {
       price: 21000,
       costPrice: 10000,
       sku: "HD-003",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/hoodie-3.jpg"],
+      images: [],
       variants: sizeColorVariants(["S", "M", "L"], ["Beige", "Black"], 21000),
     },
     {
@@ -127,7 +127,7 @@ async function main() {
       price: 27500,
       costPrice: 13000,
       sku: "HD-004",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/hoodie-4.jpg"],
+      images: [],
       stockQuantity: 40,
     },
     {
@@ -139,7 +139,7 @@ async function main() {
       costPrice: 4000,
       sku: "TS-001",
       isFeatured: true,
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/tee-1.jpg"],
+      images: [],
       variants: sizeColorVariants(["S", "M", "L", "XL"], ["White", "Black", "Grey"], 9500),
     },
     {
@@ -151,7 +151,7 @@ async function main() {
       compareAtPrice: 15000,
       costPrice: 5000,
       sku: "TS-002",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/tee-2.jpg"],
+      images: [],
       variants: sizeColorVariants(["M", "L", "XL"], ["Black", "White"], 12000),
     },
     {
@@ -162,7 +162,7 @@ async function main() {
       price: 11000,
       costPrice: 4800,
       sku: "TS-003",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/tee-3.jpg"],
+      images: [],
       stockQuantity: 25,
     },
     {
@@ -173,7 +173,7 @@ async function main() {
       price: 13500,
       costPrice: 6000,
       sku: "TS-004",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/tee-4.jpg"],
+      images: [],
       variants: sizeColorVariants(["S", "M", "L", "XL"], ["Navy", "White"], 13500),
     },
     {
@@ -184,7 +184,7 @@ async function main() {
       price: 14000,
       costPrice: 6500,
       sku: "TS-005",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/tee-5.jpg"],
+      images: [],
       stockQuantity: 18,
     },
     {
@@ -196,7 +196,7 @@ async function main() {
       costPrice: 15000,
       sku: "SN-001",
       isFeatured: true,
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/sneaker-1.jpg"],
+      images: [],
       variants: sizeColorVariants(["40", "41", "42", "43", "44"], ["White", "Black"], 28000),
     },
     {
@@ -208,7 +208,7 @@ async function main() {
       compareAtPrice: 48000,
       costPrice: 24000,
       sku: "SN-002",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/sneaker-2.jpg"],
+      images: [],
       variants: sizeColorVariants(["41", "42", "43", "44"], ["Grey", "Black"], 42000),
     },
     {
@@ -219,7 +219,7 @@ async function main() {
       price: 35000,
       costPrice: 19000,
       sku: "SN-003",
-      images: ["https://res.cloudinary.com/demo/image/upload/v1/samples/ecommerce/sneaker-3.jpg"],
+      images: [],
       stockQuantity: 20,
     },
   ];
