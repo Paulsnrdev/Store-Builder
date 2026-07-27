@@ -1,6 +1,6 @@
 # Store Builder
 
-An e-commerce store builder for Nigerian sellers currently doing business in Instagram DMs. Sellers get a hosted storefront with products, cart, Paystack checkout, order management, and WhatsApp for customer communication.
+An e-commerce store builder for sellers currently doing business in Instagram or Whatsapp DMs. Sellers get a hosted storefront with products, cart, Paystack checkout, order management, and WhatsApp for customer communication.
 
 Stack: Next.js 15 (App Router), TypeScript, Tailwind CSS, Prisma, PostgreSQL (Supabase), Auth.js, Paystack, Cloudinary, Vercel.
 
