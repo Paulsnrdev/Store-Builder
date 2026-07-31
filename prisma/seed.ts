@@ -7,10 +7,10 @@ async function main() {
   const passwordHash = await bcrypt.hash("password123", 10);
 
   const user = await prisma.user.upsert({
-    where: { email: "demo@storebuilder.ng" },
+    where: { email: "demo@storehike.ng" },
     update: {},
     create: {
-      email: "demo@storebuilder.ng",
+      email: "demo@storehike.ng",
       name: "Demo Seller",
       password: passwordHash,
     },
@@ -360,7 +360,7 @@ async function main() {
   });
 
   console.log(`\nSeed complete. Store: ${store.name} (${store.slug})`);
-  console.log(`Demo login: demo@storebuilder.ng / password123`);
+  console.log(`Demo login: demo@storehike.ng / password123`);
 }
 
 main()

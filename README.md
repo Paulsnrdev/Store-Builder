@@ -1,4 +1,4 @@
-# Store Builder
+# StoreHike
 
 An e-commerce store builder for sellers currently doing business in Instagram or Whatsapp DMs. Sellers get a hosted storefront with products, cart, Flutterwave checkout, order management, and WhatsApp for customer communication.
 
@@ -82,7 +82,7 @@ npm test
 - **Flutterwave amounts are in the currency's major unit** (e.g. Naira), not kobo/lowest-denomination like Paystack — `initializeTransaction` passes `total` directly, not `total * 100`. Getting this wrong would under/overcharge by 100x, so it's called out explicitly here.
 - A seller's Flutterwave subaccount split percentage (set on Flutterwave's dashboard when the subaccount is created) governs the platform-fee split — there's no separate fee field in this app yet. That lands with subscription plan billing in a later phase.
 
-The demo store (`chunkz`) seeds 12 products across 3 categories (some with size/colour variants), 3 shipping zones, a discount code, a customer, and a paid order. Demo login: `demo@storebuilder.ng` / `password123`.
+The demo store (`chunkz`) seeds 12 products across 3 categories (some with size/colour variants), 3 shipping zones, a discount code, a customer, and a paid order. Demo login: `demo@storehike.ng` / `password123`.
 
 ## Order management
 

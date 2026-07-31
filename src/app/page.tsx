@@ -30,7 +30,7 @@ export default function MarketingHomePage() {
     <div className="flex flex-1 flex-col bg-white">
       <header className="border-b border-gray-100 px-4 py-4">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <span className="text-lg font-semibold text-gray-900">Store Builder</span>
+          <span className="text-lg font-semibold text-gray-900">StoreHike</span>
           <nav className="flex items-center gap-4 text-sm font-medium">
             <Link href="/login" className="text-gray-600 hover:text-gray-900">
               Log in
@@ -47,7 +47,7 @@ export default function MarketingHomePage() {
           Turn your Instagram &amp; WhatsApp shop into a real store
         </h1>
         <p className="mt-4 text-lg text-gray-600">
-          Stop taking orders one DM at a time. Store Builder gives Nigerian sellers a hosted storefront, cart,
+          Stop taking orders one DM at a time. StoreHike gives Nigerian sellers a hosted storefront, cart,
           checkout, and order dashboard — set up in minutes.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
@@ -95,7 +95,7 @@ export default function MarketingHomePage() {
       </section>
 
       <footer className="border-t border-gray-100 px-4 py-8 text-center text-xs text-gray-400">
-        Store Builder — hosted storefronts for Instagram &amp; WhatsApp sellers.
+        StoreHike — hosted storefronts for Instagram &amp; WhatsApp sellers.
       </footer>
     </div>
   );

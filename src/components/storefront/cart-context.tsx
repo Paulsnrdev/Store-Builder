@@ -38,11 +38,11 @@ export function cartItemKey(productId: string, variantId: string | null) {
 }
 
 function cartStorageKey(storeSlug: string) {
-  return `storebuilder:cart:${storeSlug}`;
+  return `storehike:cart:${storeSlug}`;
 }
 
 function phoneStorageKey(storeSlug: string) {
-  return `storebuilder:cart-phone:${storeSlug}`;
+  return `storehike:cart-phone:${storeSlug}`;
 }
 
 export function CartProvider({

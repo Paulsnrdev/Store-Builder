@@ -22,7 +22,7 @@ export async function uploadImage(formData: FormData): Promise<{ url?: string; e
 
   try {
     const result = await cloudinary.uploader.upload(dataUri, {
-      folder: `storebuilder/${store.id}`,
+      folder: `storehike/${store.id}`,
     });
     return { url: result.secure_url };
   } catch {

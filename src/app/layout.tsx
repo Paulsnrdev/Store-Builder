@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Store Builder", template: "%s · Store Builder" },
+  title: { default: "StoreHike", template: "%s · StoreHike" },
   description: "Hosted storefronts for Instagram and WhatsApp sellers — products, cart, checkout, and order management in one dashboard.",
 };
 

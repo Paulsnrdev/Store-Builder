@@ -27,7 +27,7 @@ export default async function StorefrontLayout({
         <StorefrontHeader storeSlug={store.slug} storeName={store.name} logoUrl={store.logoUrl} />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-gray-200 px-4 py-6 text-center text-xs text-gray-400">
-          {store.name} · Powered by Store Builder
+          {store.name} · Powered by StoreHike
           <SocialLinks links={socialLinks} />
         </footer>
       </div>

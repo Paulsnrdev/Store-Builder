@@ -127,7 +127,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     if (input.paymentMethod === "FLUTTERWAVE") {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
       const result = await initializeTransaction({
-        email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storebuilder.ng`,
+        email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storehike.ng`,
         name: input.customer.name,
         phone: input.customer.phone,
         amount: total,

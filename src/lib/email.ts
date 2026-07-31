@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.RESEND_FROM_EMAIL || "Store Builder <onboarding@resend.dev>";
+const FROM = process.env.RESEND_FROM_EMAIL || "StoreHike <onboarding@resend.dev>";
 
 export async function sendEmail(params: { to: string; subject: string; html: string }): Promise<void> {
   if (!resend) return;
