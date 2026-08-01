@@ -97,6 +97,17 @@ The demo store (`chunkz`) seeds 12 products across 3 categories (some with size/
 - `/dashboard/shipping` — CRUD for shipping zones (name, a set of Nigerian states, a flat rate, an optional free-shipping threshold). A state not covered by any zone ships free by default, matching the existing checkout behavior in `src/lib/actions/orders.ts`.
 - The marketing homepage at `/` and storefront pages (`/shop/[slug]`, `/product/[productSlug]`, `/category/[categorySlug]`) carry per-page `<title>`/description metadata and JSON-LD (`Store`/`Product` schema) for SEO and link-preview cards.
 
+## Load handling
+
+Storefront read paths (`getPublishedStore`, and the data fetchers in the home/category/product pages) go through `src/lib/request-cache.ts` — a minimal per-process cache **with in-flight request coalescing**, not just a time-based TTL. This distinction matters: a burst of concurrent *first* requests to a cold cache doesn't get deduplicated by time-based caching alone (each one is a cache miss, so each fires its own query) — coalescing means concurrent callers for the same key share one in-flight query instead of each starting their own.
+
+This was found and fixed via actual load testing (100% would fail below this fix, 100% succeed above it), not guessed at:
+- **Before:** 100 concurrent requests to the store home page → 99% failed with Prisma `P2024` ("Timed out fetching a new connection from the connection pool"). Root cause: `DATABASE_URL`'s `connection_limit` (correctly set low for serverless — see the note under Environment variables) means a single process only has a handful of DB connections; without request coalescing, 100 concurrent uncached page renders means ~100 concurrent queries competing for those few connections.
+- **After:** the same 100-concurrent burst, a mixed 100-concurrent-session browsing test (300 requests across 3 different pages), and a 500-concurrent burst all succeed at 100%, because a stampede of identical concurrent requests collapses into one real query.
+- Next.js's own `unstable_cache` was tried first and didn't coalesce reliably under this exact test — the hand-rolled version is deliberate, not an oversight.
+
+**Caveat:** this cache is process-local — it dedupes whatever concurrent load lands on one server process/instance, but doesn't share state across multiple Vercel serverless instances. It still meaningfully helps in production (it collapses the exact failure mode reproduced above), but hasn't been load-tested against real multi-instance Vercel infrastructure, only locally via `next start` against the real Supabase database. Two knobs worth revisiting if real traffic outgrows this: bump `connection_limit` further (currently `3`, up from the more conservative serverless-standard `1`), and/or move to a shared cache (Redis/Upstash) if instance-local caching stops being enough.
+
 ## Launch checklist
 
 Before pointing a seller's domain at this in production:

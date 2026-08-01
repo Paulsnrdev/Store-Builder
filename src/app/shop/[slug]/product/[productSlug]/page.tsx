@@ -2,11 +2,62 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublishedStore } from "@/lib/storefront";
 import { prisma } from "@/lib/prisma";
+import { cached } from "@/lib/request-cache";
 import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ProductOptions } from "@/components/storefront/product-options";
-import { ProductCard } from "@/components/storefront/product-card";
+import { ProductCard, type ProductCardData } from "@/components/storefront/product-card";
 import { isProductOutOfStock } from "@/lib/inventory-status";
 import { appUrl, jsonLd, stripHtml, truncate } from "@/lib/seo";
+
+// Safe to cache: checkout re-validates stock server-side at order creation regardless
+// of what this page displays, so a stale "in stock" for up to a minute can't oversell.
+function fetchProductData(storeId: string, productSlug: string) {
+  return cached(`product:${storeId}:${productSlug}`, 60_000, async () => {
+    const product = await prisma.product.findFirst({
+      where: { storeId, slug: productSlug, isActive: true },
+      include: { images: { orderBy: { sortOrder: "asc" } }, variants: true, category: true },
+    });
+    if (!product) return null;
+
+    const related = product.categoryId
+      ? await prisma.product.findMany({
+          where: { storeId, categoryId: product.categoryId, isActive: true, id: { not: product.id } },
+          include: { images: { orderBy: { sortOrder: "asc" }, take: 1 }, variants: { select: { stockQuantity: true } } },
+          take: 4,
+        })
+      : [];
+
+    const relatedMapped: ProductCardData[] = related.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      price: p.price.toString(),
+      compareAtPrice: p.compareAtPrice?.toString() ?? null,
+      imageUrl: p.images[0]?.url ?? null,
+      outOfStock: isProductOutOfStock(p),
+    }));
+
+    return {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
+      price: product.price.toString(),
+      trackInventory: product.trackInventory,
+      stockQuantity: product.stockQuantity,
+      categoryName: product.category?.name ?? null,
+      images: product.images.map((i) => i.url),
+      variants: product.variants.map((v) => ({
+        id: v.id,
+        name: v.name,
+        options: v.options as Record<string, string>,
+        price: v.price ? v.price.toString() : null,
+        stockQuantity: v.stockQuantity,
+      })),
+      outOfStock: isProductOutOfStock(product),
+      related: relatedMapped,
+    };
+  });
+}
 
 export async function generateMetadata({
   params,
@@ -15,10 +66,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, productSlug } = await params;
   const store = await getPublishedStore(slug);
-  const product = await prisma.product.findFirst({
-    where: { storeId: store.id, slug: productSlug, isActive: true },
-    include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-  });
+  const product = await fetchProductData(store.id, productSlug);
   if (!product) return {};
 
   const description = product.description ? truncate(stripHtml(product.description), 160) : `${product.name} at ${store.name}.`;
@@ -30,7 +78,7 @@ export async function generateMetadata({
       title: product.name,
       description,
       url: `${appUrl()}/shop/${store.slug}/product/${product.slug}`,
-      images: product.images[0] ? [product.images[0].url] : [],
+      images: product.images[0] ? [product.images[0]] : [],
     },
   };
 }
@@ -43,25 +91,8 @@ export default async function ProductPage({
   const { slug, productSlug } = await params;
   const store = await getPublishedStore(slug);
 
-  const product = await prisma.product.findFirst({
-    where: { storeId: store.id, slug: productSlug, isActive: true },
-    include: {
-      images: { orderBy: { sortOrder: "asc" } },
-      variants: true,
-      category: true,
-    },
-  });
+  const product = await fetchProductData(store.id, productSlug);
   if (!product) notFound();
-
-  const related = product.categoryId
-    ? await prisma.product.findMany({
-        where: { storeId: store.id, categoryId: product.categoryId, isActive: true, id: { not: product.id } },
-        include: { images: { orderBy: { sortOrder: "asc" }, take: 1 }, variants: { select: { stockQuantity: true } } },
-        take: 4,
-      })
-    : [];
-
-  const outOfStock = isProductOutOfStock(product);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
@@ -72,22 +103,22 @@ export default async function ProductPage({
           "@type": "Product",
           name: product.name,
           description: product.description ? stripHtml(product.description) : undefined,
-          image: product.images.map((i) => i.url),
+          image: product.images,
           offers: {
             "@type": "Offer",
             url: `${appUrl()}/shop/${store.slug}/product/${product.slug}`,
             priceCurrency: store.currency,
-            price: product.price.toString(),
-            availability: outOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+            price: product.price,
+            availability: product.outOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
           },
         })}
       />
       <div className="grid gap-6 sm:grid-cols-2">
-        <ProductGallery images={product.images.map((i) => i.url)} name={product.name} />
+        <ProductGallery images={product.images} name={product.name} />
 
         <div>
-          {product.category && (
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{product.category.name}</p>
+          {product.categoryName && (
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{product.categoryName}</p>
           )}
           <h1 className="mt-1 text-xl font-semibold text-gray-900">{product.name}</h1>
 
@@ -98,13 +129,13 @@ export default async function ProductPage({
               slug={product.slug}
               name={product.name}
               basePrice={Number(product.price)}
-              image={product.images[0]?.url ?? null}
+              image={product.images[0] ?? null}
               trackInventory={product.trackInventory}
               stockQuantity={product.stockQuantity}
               variants={product.variants.map((v) => ({
                 id: v.id,
                 name: v.name,
-                options: v.options as Record<string, string>,
+                options: v.options,
                 price: v.price ? Number(v.price) : null,
                 stockQuantity: v.stockQuantity,
               }))}
@@ -120,23 +151,12 @@ export default async function ProductPage({
         </div>
       </div>
 
-      {related.length > 0 && (
+      {product.related.length > 0 && (
         <section className="mt-12">
           <h2 className="mb-3 text-lg font-semibold text-gray-900">You may also like</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {related.map((p) => (
-              <ProductCard
-                key={p.id}
-                storeSlug={store.slug}
-                product={{
-                  slug: p.slug,
-                  name: p.name,
-                  price: p.price.toString(),
-                  compareAtPrice: p.compareAtPrice?.toString() ?? null,
-                  imageUrl: p.images[0]?.url ?? null,
-                  outOfStock: isProductOutOfStock(p),
-                }}
-              />
+            {product.related.map((p) => (
+              <ProductCard key={p.slug} storeSlug={store.slug} product={p} />
             ))}
           </div>
         </section>

@@ -3,9 +3,44 @@ import Link from "next/link";
 import Image from "next/image";
 import { getPublishedStore } from "@/lib/storefront";
 import { prisma } from "@/lib/prisma";
-import { ProductCard } from "@/components/storefront/product-card";
+import { cached } from "@/lib/request-cache";
+import { ProductCard, type ProductCardData } from "@/components/storefront/product-card";
 import { isProductOutOfStock } from "@/lib/inventory-status";
 import { appUrl, jsonLd, truncate } from "@/lib/seo";
+
+function fetchHomeData(storeId: string) {
+  return cached(`home:${storeId}`, 60_000, async () => {
+    const [categories, featured, allProducts] = await Promise.all([
+      prisma.category.findMany({ where: { storeId }, orderBy: { sortOrder: "asc" } }),
+      prisma.product.findMany({
+        where: { storeId, isActive: true, isFeatured: true },
+        include: { images: { orderBy: { sortOrder: "asc" }, take: 1 }, variants: { select: { stockQuantity: true } } },
+        orderBy: { sortOrder: "asc" },
+        take: 8,
+      }),
+      prisma.product.findMany({
+        where: { storeId, isActive: true },
+        include: { images: { orderBy: { sortOrder: "asc" }, take: 1 }, variants: { select: { stockQuantity: true } } },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    const mapProduct = (p: (typeof featured)[number]): ProductCardData => ({
+      slug: p.slug,
+      name: p.name,
+      price: p.price.toString(),
+      compareAtPrice: p.compareAtPrice?.toString() ?? null,
+      imageUrl: p.images[0]?.url ?? null,
+      outOfStock: isProductOutOfStock(p),
+    });
+
+    return {
+      categories: categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug })),
+      featured: featured.map(mapProduct),
+      allProducts: allProducts.map(mapProduct),
+    };
+  });
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -27,21 +62,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function StorefrontHomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const store = await getPublishedStore(slug);
-
-  const [categories, featured, allProducts] = await Promise.all([
-    prisma.category.findMany({ where: { storeId: store.id }, orderBy: { sortOrder: "asc" } }),
-    prisma.product.findMany({
-      where: { storeId: store.id, isActive: true, isFeatured: true },
-      include: { images: { orderBy: { sortOrder: "asc" }, take: 1 }, variants: { select: { stockQuantity: true } } },
-      orderBy: { sortOrder: "asc" },
-      take: 8,
-    }),
-    prisma.product.findMany({
-      where: { storeId: store.id, isActive: true },
-      include: { images: { orderBy: { sortOrder: "asc" }, take: 1 }, variants: { select: { stockQuantity: true } } },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const { categories, featured, allProducts } = await fetchHomeData(store.id);
 
   return (
     <div>
@@ -87,18 +108,7 @@ export default async function StorefrontHomePage({ params }: { params: Promise<{
             <h2 className="mb-3 text-lg font-semibold text-gray-900">Featured</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {featured.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  storeSlug={store.slug}
-                  product={{
-                    slug: p.slug,
-                    name: p.name,
-                    price: p.price.toString(),
-                    compareAtPrice: p.compareAtPrice?.toString() ?? null,
-                    imageUrl: p.images[0]?.url ?? null,
-                    outOfStock: isProductOutOfStock(p),
-                  }}
-                />
+                <ProductCard key={p.slug} storeSlug={store.slug} product={p} />
               ))}
             </div>
           </section>
@@ -111,18 +121,7 @@ export default async function StorefrontHomePage({ params }: { params: Promise<{
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {allProducts.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  storeSlug={store.slug}
-                  product={{
-                    slug: p.slug,
-                    name: p.name,
-                    price: p.price.toString(),
-                    compareAtPrice: p.compareAtPrice?.toString() ?? null,
-                    imageUrl: p.images[0]?.url ?? null,
-                    outOfStock: isProductOutOfStock(p),
-                  }}
-                />
+                <ProductCard key={p.slug} storeSlug={store.slug} product={p} />
               ))}
             </div>
           )}

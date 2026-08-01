@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { cached } from "@/lib/request-cache";
 
 export async function getPublishedStore(slug: string) {
-  const store = await prisma.store.findFirst({ where: { slug, isPublished: true } });
+  const store = await cached(`store:${slug}`, 60_000, () =>
+    prisma.store.findFirst({ where: { slug, isPublished: true } })
+  );
   if (!store) notFound();
   return store;
 }
