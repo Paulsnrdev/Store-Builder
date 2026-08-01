@@ -2,8 +2,13 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
+  // "native" covers local dev (Windows); "rhel-openssl-3.0.x" is Vercel's actual Lambda
+  // runtime, which differs from its build machine — without this, prisma generate (run
+  // via postinstall during the Vercel build) produces an engine binary that works during
+  // build but can't be found at runtime, failing every single database call in production.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
