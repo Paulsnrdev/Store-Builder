@@ -1,3 +1,4 @@
+import "@/lib/prisma-engine-path";
 import { PrismaClient } from "@/generated/prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
