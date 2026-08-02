@@ -207,7 +207,7 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
             </div>
             <div className="flex justify-between text-gray-600">
               <span>Shipping{zone ? ` (${zone.name})` : ""}</span>
-              <span>{state ? (zone ? `₦${shippingCost.toLocaleString()}` : "Not available") : "—"}</span>
+              <span>{state ? (shippingCost > 0 ? `₦${shippingCost.toLocaleString()}` : "Free") : "—"}</span>
             </div>
             {discount && (
               <div className="flex justify-between text-gray-600">
@@ -225,7 +225,7 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
 
           <button
             type="submit"
-            disabled={placing || !state || (!!state && !zone)}
+            disabled={placing || !state}
             className="mt-4 w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
           >
             {placing ? "Placing order..." : "Place order"}
