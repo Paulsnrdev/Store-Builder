@@ -15,7 +15,7 @@ export const getCurrentStore = cache(async () => {
     where: { userId: session.user.id },
     orderBy: { createdAt: "asc" },
   });
-  if (!store) redirect("/register");
+  if (!store) redirect(session.user.role === "ADMIN" ? "/admin" : "/register");
   if (store.isSuspended) redirect("/suspended");
   return store;
 });
