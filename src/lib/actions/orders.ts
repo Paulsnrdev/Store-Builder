@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { priceCartItems, type CartItemRequest } from "@/lib/order-pricing";
-import { reserveStock, InsufficientStockError } from "@/lib/inventory";
+import { reserveStock, restoreStock, InsufficientStockError } from "@/lib/inventory";
 import { validateDiscountCode } from "@/lib/discounts";
 import { randomOrderNumber } from "@/lib/order-number";
 import { initializeTransaction } from "@/lib/flutterwave";
@@ -139,8 +139,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       });
 
       if (!result.ok) {
-        // Payment couldn't start — leave the order PENDING (bank transfer/COD are still valid fallbacks)
-        // rather than losing the reservation, and surface the error so the buyer can retry or pick another method.
+        // Payment couldn't start — the order was already committed above, but the buyer never
+        // completed checkout, so undo it: release the reserved stock, give back any discount
+        // usage, and delete the order. Otherwise it sits as a phantom PENDING order on the
+        // seller's dashboard that the buyer doesn't know exists and never gets paid.
+        await prisma.$transaction(async (tx) => {
+          await restoreStock(tx, priced.lineItems);
+          if (discountId) {
+            await tx.discount.update({ where: { id: discountId }, data: { usageCount: { decrement: 1 } } });
+          }
+          await tx.order.delete({ where: { id: order.id } });
+        });
         return { ok: false, error: result.error };
       }
 
