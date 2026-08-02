@@ -36,12 +36,9 @@ export async function registerSeller(_prevState: RegisterState, formData: FormDa
     return { error: "An account with this email already exists." };
   }
 
-  const baseSlug = slugify(storeName) || "store";
-  let slug = baseSlug;
-  let suffix = 0;
-  while (await prisma.store.findUnique({ where: { slug } })) {
-    suffix += 1;
-    slug = `${baseSlug}-${suffix}`;
+  const slug = slugify(storeName) || "store";
+  if (await prisma.store.findUnique({ where: { slug } })) {
+    return { error: "That store name is taken. Please choose another." };
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
@@ -83,12 +80,9 @@ export async function completeStoreSetup(_prevState: RegisterState, formData: Fo
   const existingStore = await prisma.store.findFirst({ where: { userId: session.user.id } });
   if (existingStore) redirect("/dashboard");
 
-  const baseSlug = slugify(parsed.data.storeName) || "store";
-  let slug = baseSlug;
-  let suffix = 0;
-  while (await prisma.store.findUnique({ where: { slug } })) {
-    suffix += 1;
-    slug = `${baseSlug}-${suffix}`;
+  const slug = slugify(parsed.data.storeName) || "store";
+  if (await prisma.store.findUnique({ where: { slug } })) {
+    return { error: "That store name is taken. Please choose another." };
   }
 
   await prisma.store.create({
