@@ -31,7 +31,7 @@ export function StorefrontHeader({
 
   return (
     <>
-    <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-20 bg-(--store-primary,#111827)">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-1">
           <button
@@ -39,7 +39,7 @@ export function StorefrontHeader({
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
-            className="-ml-2 flex h-9 w-9 items-center justify-center rounded-md text-gray-700 sm:hidden"
+            className="-ml-2 flex h-9 w-9 items-center justify-center rounded-md text-white sm:hidden"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
@@ -49,27 +49,27 @@ export function StorefrontHeader({
             {logoUrl ? (
               <Image src={logoUrl} alt={storeName} width={32} height={32} className="rounded-full object-cover" />
             ) : null}
-            <span className="text-lg font-semibold text-gray-900">{storeName}</span>
+            <span className="text-lg font-semibold text-white">{storeName}</span>
           </Link>
         </div>
 
-        <nav className="hidden items-center gap-5 text-sm font-medium text-gray-700 sm:flex">
-          <Link href={`/shop/${storeSlug}`} className="hover:text-gray-950">
+        <nav className="hidden items-center gap-5 text-sm font-medium text-white/85 sm:flex">
+          <Link href={`/shop/${storeSlug}`} className="hover:text-white">
             Home
           </Link>
           {categories.map((c) => (
-            <Link key={c.id} href={`/shop/${storeSlug}/category/${c.slug}`} className="hover:text-gray-950">
+            <Link key={c.id} href={`/shop/${storeSlug}/category/${c.slug}`} className="hover:text-white">
               {c.name}
             </Link>
           ))}
         </nav>
 
-        <Link href={`/shop/${storeSlug}/cart`} className="relative flex items-center gap-1 text-sm font-medium text-gray-700">
+        <Link href={`/shop/${storeSlug}/cart`} className="relative flex items-center gap-1 text-sm font-medium text-white">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 1.87-4.694 2.25-7.5H5.106M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
           </svg>
           {itemCount > 0 && (
-            <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-xs text-white">
+            <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-semibold text-(--store-primary,#111827)">
               {itemCount}
             </span>
           )}
