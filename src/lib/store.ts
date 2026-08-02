@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +9,7 @@ export async function requireSession() {
   return session;
 }
 
-export async function getCurrentStore() {
+export const getCurrentStore = cache(async () => {
   const session = await requireSession();
   const store = await prisma.store.findFirst({
     where: { userId: session.user.id },
@@ -16,4 +17,4 @@ export async function getCurrentStore() {
   });
   if (!store) redirect("/register");
   return store;
-}
+});
