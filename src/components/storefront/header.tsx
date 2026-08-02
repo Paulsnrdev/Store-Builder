@@ -30,6 +30,7 @@ export function StorefrontHeader({
   }, [menuOpen]);
 
   return (
+    <>
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-1">
@@ -74,10 +75,12 @@ export function StorefrontHeader({
           )}
         </Link>
       </div>
+    </header>
 
-      {/* Off-canvas nav drawer (mobile only). Kept mounted while closed so the
-          slide-out transition can play instead of the panel just vanishing. */}
-      <div
+    {/* Off-canvas nav drawer (mobile only). Rendered as a sibling of <header>, not a
+        descendant — header's backdrop-blur creates a containing block in Safari that
+        would otherwise confine this fixed-position panel to the header's own height. */}
+    <div
         className={`fixed inset-0 z-30 sm:hidden ${menuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         aria-hidden={!menuOpen}
       >
@@ -135,7 +138,7 @@ export function StorefrontHeader({
             </li>
           </ul>
         </nav>
-      </div>
-    </header>
+    </div>
+    </>
   );
 }
