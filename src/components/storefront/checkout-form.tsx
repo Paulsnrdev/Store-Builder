@@ -29,6 +29,8 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
   const [placing, startPlacing] = useTransition();
   const [orderError, setOrderError] = useState<string | null>(null);
 
+  const [step, setStep] = useState<"details" | "payment">("details");
+
   const zone = useMemo(() => zones.find((z) => z.states.includes(state)), [zones, state]);
   const shippingCost = zone ? (zone.freeAbove !== null && subtotal >= zone.freeAbove ? 0 : zone.rate) : 0;
   const discountAmount = discount?.amount ?? 0;
@@ -50,6 +52,12 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (items.length === 0) return;
+
+    if (step === "details") {
+      setStep("payment");
+      return;
+    }
+
     setOrderError(null);
     startPlacing(async () => {
       const result = await placeOrder({
@@ -83,87 +91,110 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-5">
       <div className="space-y-4 sm:col-span-3">
-        <div>
-          <h2 className="text-sm font-medium text-gray-700">Contact</h2>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
-            <input
-              required
-              placeholder="Full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-            />
-            <input
-              required
-              placeholder="Phone (WhatsApp)"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
-            <input
-              type="email"
-              placeholder="Email (optional)"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-sm font-medium text-gray-700">Shipping address</h2>
-          <div className="mt-2 grid gap-3">
-            <textarea
-              required
-              placeholder="Street address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              rows={2}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
-            <select
-              required
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="">Select state</option>
-              {NIGERIAN_STATES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <textarea
-              placeholder="Note for the seller (optional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-sm font-medium text-gray-700">Payment method</h2>
-          <div className="mt-2 space-y-2">
-            {[
-              { value: "FLUTTERWAVE", label: "Pay with card (Flutterwave)" },
-              { value: "BANK_TRANSFER", label: "Bank transfer" },
-              { value: "CASH_ON_DELIVERY", label: "Cash on delivery" },
-            ].map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm">
+        {step === "details" ? (
+          <>
+            <div>
+              <h2 className="text-sm font-medium text-gray-700">Contact</h2>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 <input
-                  type="radio"
-                  name="paymentMethod"
-                  checked={paymentMethod === opt.value}
-                  onChange={() => setPaymentMethod(opt.value as typeof paymentMethod)}
+                  required
+                  placeholder="Full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
                 />
-                {opt.label}
-              </label>
-            ))}
-          </div>
-        </div>
+                <input
+                  required
+                  placeholder="Phone (WhatsApp)"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
+                <input
+                  type="email"
+                  placeholder="Email (optional)"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-sm font-medium text-gray-700">Shipping address</h2>
+              <div className="mt-2 grid gap-3">
+                <textarea
+                  required
+                  placeholder="Street address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  rows={2}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
+                <select
+                  required
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                >
+                  <option value="">Select state</option>
+                  {NIGERIAN_STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                <textarea
+                  placeholder="Note for the seller (optional)"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={2}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="rounded-md border border-gray-200 p-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium text-gray-700">Contact & shipping</h2>
+                <button type="button" onClick={() => setStep("details")} className="text-xs font-medium text-gray-500 hover:underline">
+                  Edit
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-gray-700">{name}</p>
+              <p className="text-sm text-gray-500">
+                {phone}
+                {email ? ` · ${email}` : ""}
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                {address}, {state}
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-sm font-medium text-gray-700">Payment method</h2>
+              <div className="mt-2 space-y-2">
+                {[
+                  { value: "FLUTTERWAVE", label: "Pay with card (Flutterwave)" },
+                  { value: "BANK_TRANSFER", label: "Bank transfer" },
+                  { value: "CASH_ON_DELIVERY", label: "Cash on delivery" },
+                ].map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      checked={paymentMethod === opt.value}
+                      onChange={() => setPaymentMethod(opt.value as typeof paymentMethod)}
+                    />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="sm:col-span-2">
@@ -225,11 +256,20 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
 
           <button
             type="submit"
-            disabled={placing || !state}
+            disabled={placing || (step === "payment" && !state)}
             className="mt-4 w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
           >
-            {placing ? "Placing order..." : "Place order"}
+            {step === "details" ? "Continue" : placing ? "Placing order..." : "Place order"}
           </button>
+          {step === "payment" && (
+            <button
+              type="button"
+              onClick={() => setStep("details")}
+              className="mt-2 w-full text-center text-sm font-medium text-gray-500 hover:underline"
+            >
+              Back
+            </button>
+          )}
         </div>
       </div>
     </form>
