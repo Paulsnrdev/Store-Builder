@@ -16,5 +16,6 @@ export const getCurrentStore = cache(async () => {
     orderBy: { createdAt: "asc" },
   });
   if (!store) redirect("/register");
+  if (store.isSuspended) redirect("/suspended");
   return store;
 });

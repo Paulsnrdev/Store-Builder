@@ -4,7 +4,7 @@ import { cached } from "@/lib/request-cache";
 
 export async function getPublishedStore(slug: string) {
   const store = await cached(`store:${slug}`, 60_000, () =>
-    prisma.store.findFirst({ where: { slug, isPublished: true } })
+    prisma.store.findFirst({ where: { slug, isPublished: true, isSuspended: false } })
   );
   if (!store) notFound();
   return store;

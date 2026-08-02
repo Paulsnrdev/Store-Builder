@@ -22,7 +22,7 @@ type PlaceOrderInput = {
 type PlaceOrderResult = { ok: true; orderNumber: string; flutterwavePaymentLink?: string } | { ok: false; error: string };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
-  const store = await prisma.store.findFirst({ where: { id: input.storeId, isPublished: true } });
+  const store = await prisma.store.findFirst({ where: { id: input.storeId, isPublished: true, isSuspended: false } });
   if (!store) return { ok: false, error: "Store not found." };
 
   if (!input.customer.name.trim() || !input.customer.phone.trim()) {

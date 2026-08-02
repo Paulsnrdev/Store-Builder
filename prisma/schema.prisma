@@ -26,6 +26,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  role          Role      @default(USER)
 
   accounts Account[]
   sessions Session[]
@@ -33,6 +34,11 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 model Account {
@@ -97,6 +103,9 @@ model Store {
   bankName                String?
   bankAccountNumber       String?
   bankAccountName         String?
+  isSuspended             Boolean @default(false)
+  suspendedAt             DateTime?
+  suspendedReason         String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -107,6 +116,7 @@ model Store {
   shippingZones ShippingZone[]
   discounts     Discount[]
   carts         Cart[]
+  subscription  Subscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -339,4 +349,55 @@ enum PaymentMethod {
 enum DiscountType {
   PERCENTAGE
   FIXED
+}
+
+// ---------- Billing ----------
+
+model Plan {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  monthlyPrice Decimal  @db.Decimal(10, 2)
+  yearlyPrice  Decimal  @db.Decimal(10, 2)
+  currency     String   @default("NGN")
+  features     Json?
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  storeId          String             @unique
+  planId           String
+  interval         BillingInterval    @default(MONTHLY)
+  status           SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd DateTime?
+  canceledAt       DateTime?
+  notes            String?
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  plan  Plan  @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId])
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
 }

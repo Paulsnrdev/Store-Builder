@@ -1,4 +1,4 @@
-import { PrismaClient, DiscountType, PaymentMethod } from "../src/generated/prisma/client";
+import { PrismaClient, DiscountType, PaymentMethod, Role } from "../src/generated/prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -13,6 +13,19 @@ async function main() {
       email: "demo@storehike.ng",
       name: "Demo Seller",
       password: passwordHash,
+    },
+  });
+
+  const adminPasswordHash = await bcrypt.hash("admin123", 10);
+
+  await prisma.user.upsert({
+    where: { email: "admin@storehike.ng" },
+    update: {},
+    create: {
+      email: "admin@storehike.ng",
+      name: "Admin",
+      password: adminPasswordHash,
+      role: Role.ADMIN,
     },
   });
 
@@ -359,8 +372,37 @@ async function main() {
     },
   });
 
+  await prisma.plan.upsert({
+    where: { slug: "starter" },
+    update: {},
+    create: {
+      name: "Starter",
+      slug: "starter",
+      description: "For sellers just getting started.",
+      monthlyPrice: 5000,
+      yearlyPrice: 50000,
+      currency: "NGN",
+      sortOrder: 0,
+    },
+  });
+
+  await prisma.plan.upsert({
+    where: { slug: "growth" },
+    update: {},
+    create: {
+      name: "Growth",
+      slug: "growth",
+      description: "For sellers scaling up order volume.",
+      monthlyPrice: 15000,
+      yearlyPrice: 150000,
+      currency: "NGN",
+      sortOrder: 1,
+    },
+  });
+
   console.log(`\nSeed complete. Store: ${store.name} (${store.slug})`);
   console.log(`Demo login: demo@storehike.ng / password123`);
+  console.log(`Admin login: admin@storehike.ng / admin123`);
 }
 
 main()
