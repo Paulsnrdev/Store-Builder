@@ -3,6 +3,7 @@ import { Prisma, OrderStatus, PaymentMethod } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { orderStatusLabel, orderStatusClass, paymentMethodLabel } from "@/lib/order-status-display";
+import { FilterSelect } from "@/components/dashboard/filter-select";
 
 const STATUSES = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
 const PAYMENT_METHODS = ["FLUTTERWAVE", "BANK_TRANSFER", "CASH_ON_DELIVERY"];
@@ -48,22 +49,22 @@ export default async function OrdersPage({
           placeholder="Search order #, customer name or phone"
           className="w-72 rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
-        <select name="status" defaultValue={status ?? ""} className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+        <FilterSelect name="status" defaultValue={status ?? ""}>
           <option value="">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>
               {orderStatusLabel[s]}
             </option>
           ))}
-        </select>
-        <select name="payment" defaultValue={payment ?? ""} className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+        </FilterSelect>
+        <FilterSelect name="payment" defaultValue={payment ?? ""}>
           <option value="">All payment methods</option>
           {PAYMENT_METHODS.map((m) => (
             <option key={m} value={m}>
               {paymentMethodLabel[m]}
             </option>
           ))}
-        </select>
+        </FilterSelect>
         <button type="submit" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
           Filter
         </button>
@@ -84,6 +85,7 @@ export default async function OrdersPage({
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Payment</th>
               <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -106,11 +108,16 @@ export default async function OrdersPage({
                 </td>
                 <td className="px-4 py-3 text-gray-500">{paymentMethodLabel[order.paymentMethod]}</td>
                 <td className="px-4 py-3 text-gray-500">{order.createdAt.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</td>
+                <td className="px-4 py-3 text-right">
+                  <Link href={`/dashboard/orders/${order.id}`} className="font-medium text-gray-600 hover:underline">
+                    View
+                  </Link>
+                </td>
               </tr>
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                   No orders found.
                 </td>
               </tr>

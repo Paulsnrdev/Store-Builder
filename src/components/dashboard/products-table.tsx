@@ -126,6 +126,9 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
+                      <Link href={`/dashboard/products/${product.id}`} className="font-medium text-gray-600 hover:underline">
+                        Edit
+                      </Link>
                       <button
                         onClick={() => startTransition(() => duplicateProduct(product.id))}
                         className="font-medium text-gray-600 hover:underline"

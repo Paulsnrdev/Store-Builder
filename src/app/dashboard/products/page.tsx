@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { ProductsTable, type ProductRow } from "@/components/dashboard/products-table";
 import { getStockStatus } from "@/lib/inventory-status";
+import { FilterSelect } from "@/components/dashboard/filter-select";
 
 export default async function ProductsPage({
   searchParams,
@@ -77,24 +78,24 @@ export default async function ProductsPage({
           placeholder="Search name or SKU"
           className="rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
-        <select name="category" defaultValue={category ?? ""} className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+        <FilterSelect name="category" defaultValue={category ?? ""}>
           <option value="">All categories</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
-        </select>
-        <select name="status" defaultValue={status ?? ""} className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+        </FilterSelect>
+        <FilterSelect name="status" defaultValue={status ?? ""}>
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="draft">Draft</option>
-        </select>
-        <select name="stock" defaultValue={stock ?? ""} className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+        </FilterSelect>
+        <FilterSelect name="stock" defaultValue={stock ?? ""}>
           <option value="">All stock levels</option>
           <option value="low">Low stock</option>
           <option value="out">Out of stock</option>
-        </select>
+        </FilterSelect>
         <button type="submit" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
           Filter
         </button>
