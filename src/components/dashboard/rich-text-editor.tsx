@@ -34,7 +34,7 @@ export function RichTextEditor({ name, defaultValue }: { name: string; defaultVa
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => exec(c.command)}
-            className="rounded px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
+            className="rounded px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200"
           >
             {c.label}
           </button>
@@ -47,7 +47,7 @@ export function RichTextEditor({ name, defaultValue }: { name: string; defaultVa
         onBlur={sync}
         suppressContentEditableWarning
         dangerouslySetInnerHTML={{ __html: defaultValue ?? "" }}
-        className="min-h-[120px] rounded-b-md border border-gray-300 px-3 py-2 text-sm focus:outline-none"
+        className="min-h-[120px] rounded-b-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
       />
       <input ref={inputRef} type="hidden" name={name} defaultValue={defaultValue ?? ""} />
     </div>

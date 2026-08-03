@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export type Variant = {
   name: string;
@@ -81,24 +82,24 @@ export function VariantEditor({
         <div className="mt-1 space-y-2">
           {groups.map((group, i) => (
             <div key={i} className="flex gap-2">
-              <input
+              <Input
                 type="text"
                 value={group.name}
                 onChange={(e) => setGroups(groups.map((g, gi) => (gi === i ? { ...g, name: e.target.value } : g)))}
                 placeholder="Option name (e.g. Size)"
-                className="w-40 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+                className="w-40"
               />
-              <input
+              <Input
                 type="text"
                 value={group.valuesInput}
                 onChange={(e) => setGroups(groups.map((g, gi) => (gi === i ? { ...g, valuesInput: e.target.value } : g)))}
                 placeholder="Values, comma separated (e.g. S, M, L)"
-                className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+                className="flex-1"
               />
               <button
                 type="button"
                 onClick={() => setGroups(groups.filter((_, gi) => gi !== i))}
-                className="text-sm text-red-600"
+                className="text-sm text-red-600 transition-colors hover:underline"
               >
                 Remove
               </button>
@@ -109,14 +110,14 @@ export function VariantEditor({
           <button
             type="button"
             onClick={() => setGroups([...groups, { name: "", valuesInput: "" }])}
-            className="text-sm font-medium text-gray-600 hover:underline"
+            className="text-sm font-medium text-gray-600 transition-colors hover:underline"
           >
             + Add option
           </button>
           <button
             type="button"
             onClick={generate}
-            className="text-sm font-medium text-gray-900 underline"
+            className="text-sm font-medium text-brand-600 underline transition-colors hover:text-brand-700"
           >
             Generate combinations
           </button>
@@ -139,32 +140,32 @@ export function VariantEditor({
               <tr key={v.name}>
                 <td className="py-2 pr-2 font-medium text-gray-700">{v.name}</td>
                 <td className="py-2 pr-2">
-                  <input
+                  <Input
                     type="number"
                     step="0.01"
                     value={v.price ?? ""}
                     onChange={(e) => updateVariant(i, { price: e.target.value ? Number(e.target.value) : null })}
-                    className="w-24 rounded-md border border-gray-300 px-2 py-1"
+                    className="w-24 px-2 py-1"
                   />
                 </td>
                 <td className="py-2 pr-2">
-                  <input
+                  <Input
                     type="text"
                     value={v.sku ?? ""}
                     onChange={(e) => updateVariant(i, { sku: e.target.value || null })}
-                    className="w-28 rounded-md border border-gray-300 px-2 py-1"
+                    className="w-28 px-2 py-1"
                   />
                 </td>
                 <td className="py-2 pr-2">
-                  <input
+                  <Input
                     type="number"
                     value={v.stockQuantity}
                     onChange={(e) => updateVariant(i, { stockQuantity: Number(e.target.value) })}
-                    className="w-20 rounded-md border border-gray-300 px-2 py-1"
+                    className="w-20 px-2 py-1"
                   />
                 </td>
                 <td className="py-2">
-                  <button type="button" onClick={() => removeVariant(i)} className="text-red-600">
+                  <button type="button" onClick={() => removeVariant(i)} className="text-red-600 transition-colors hover:text-red-700">
                     ×
                   </button>
                 </td>

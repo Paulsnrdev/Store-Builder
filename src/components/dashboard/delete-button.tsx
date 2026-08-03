@@ -8,7 +8,7 @@ export function DeleteButton({ action, label = "Delete" }: { action: () => Promi
         if (!confirm("Are you sure? This cannot be undone.")) e.preventDefault();
       }}
     >
-      <button type="submit" className="text-sm font-medium text-red-600 hover:underline">
+      <button type="submit" className="text-sm font-medium text-red-600 transition-colors hover:underline">
         {label}
       </button>
     </form>

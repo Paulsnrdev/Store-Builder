@@ -10,6 +10,9 @@ import {
   cancelOrder,
   refundOrder,
 } from "@/lib/actions/order-management";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   orderId: string;
@@ -44,98 +47,76 @@ export function OrderActions({ orderId, status, paymentMethod }: Props) {
   if (!hasActions) return null;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <Card>
       <h2 className="text-sm font-semibold text-gray-900">Actions</h2>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
       <div className="mt-3 flex flex-wrap gap-2">
         {canMarkPaid && (
-          <button
-            disabled={isPending}
-            onClick={() => run(() => markOrderPaid(orderId))}
-            className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-          >
+          <Button size="sm" disabled={isPending} onClick={() => run(() => markOrderPaid(orderId))}>
             Mark as paid
-          </button>
+          </Button>
         )}
         {canMarkProcessing && (
-          <button
-            disabled={isPending}
-            onClick={() => run(() => markOrderProcessing(orderId))}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 disabled:opacity-50"
-          >
+          <Button size="sm" variant="secondary" disabled={isPending} onClick={() => run(() => markOrderProcessing(orderId))}>
             Mark as processing
-          </button>
+          </Button>
         )}
         {canMarkShipped && !showShipForm && (
-          <button
-            disabled={isPending}
-            onClick={() => setShowShipForm(true)}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 disabled:opacity-50"
-          >
+          <Button size="sm" variant="secondary" disabled={isPending} onClick={() => setShowShipForm(true)}>
             Mark as shipped
-          </button>
+          </Button>
         )}
         {canMarkDelivered && (
-          <button
-            disabled={isPending}
-            onClick={() => run(() => markOrderDelivered(orderId))}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 disabled:opacity-50"
-          >
+          <Button size="sm" variant="secondary" disabled={isPending} onClick={() => run(() => markOrderDelivered(orderId))}>
             Mark as delivered
-          </button>
+          </Button>
         )}
         {canCancel && (
-          <button
+          <Button
+            size="sm"
+            variant="danger"
             disabled={isPending}
             onClick={() => {
               if (!confirm("Cancel this order? Reserved stock will be restored.")) return;
               run(() => cancelOrder(orderId));
             }}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-red-600 disabled:opacity-50"
           >
             Cancel order
-          </button>
+          </Button>
         )}
         {canRefund && (
-          <button
+          <Button
+            size="sm"
+            variant="danger"
             disabled={isPending}
             onClick={() => {
               if (!confirm("Mark this order as refunded? Stock will be restored.")) return;
               run(() => refundOrder(orderId));
             }}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-red-600 disabled:opacity-50"
           >
             Refund
-          </button>
+          </Button>
         )}
       </div>
 
       {canMarkShipped && showShipForm && (
         <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
-          <input
+          <Input
             type="text"
             value={trackingNote}
             onChange={(e) => setTrackingNote(e.target.value)}
             placeholder="Tracking note (optional)"
-            className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            className="flex-1"
           />
-          <button
-            disabled={isPending}
-            onClick={() => run(() => markOrderShipped(orderId, trackingNote))}
-            className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-          >
+          <Button size="sm" disabled={isPending} onClick={() => run(() => markOrderShipped(orderId, trackingNote))}>
             Confirm
-          </button>
-          <button
-            disabled={isPending}
-            onClick={() => setShowShipForm(false)}
-            className="text-sm text-gray-500 hover:underline"
-          >
+          </Button>
+          <Button size="sm" variant="ghost" disabled={isPending} onClick={() => setShowShipForm(false)}>
             Cancel
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

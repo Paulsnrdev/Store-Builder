@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { bulkDeleteProducts, bulkSetActive, deleteProduct, duplicateProduct } from "@/lib/actions/products";
 import { getStockStatus, stockStatusClass, stockStatusLabel } from "@/lib/inventory-status";
+import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export type ProductRow = {
   id: string;
@@ -69,9 +71,9 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <TableShell>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
+          <TableHead>
             <tr>
               <th className="px-4 py-3">
                 <input
@@ -87,8 +89,8 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3" />
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+          </TableHead>
+          <TableBody>
             {products.map((product) => {
               const status = getStockStatus(product.trackInventory, product.stockQuantity);
               return (
@@ -115,13 +117,9 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
                     {product.trackInventory ? product.stockQuantity : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${stockStatusClass[status]}`}>
-                      {stockStatusLabel[status]}
-                    </span>
+                    <StatusBadge tone={stockStatusClass[status]}>{stockStatusLabel[status]}</StatusBadge>
                     {!product.isActive && (
-                      <span className="ml-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
-                        Draft
-                      </span>
+                      <StatusBadge tone="ml-1 bg-gray-100 text-gray-500">Draft</StatusBadge>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -149,16 +147,10 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
                 </tr>
               );
             })}
-            {products.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  No products found.
-                </td>
-              </tr>
-            )}
-          </tbody>
+            {products.length === 0 && <TableEmpty colSpan={7}>No products found.</TableEmpty>}
+          </TableBody>
         </table>
-      </div>
+      </TableShell>
     </div>
   );
 }

@@ -28,8 +28,8 @@ export function Sidebar({ storeName }: { storeName: string }) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block rounded-md px-3 py-2 text-sm font-medium ${
-                  active ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                className={`block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  active ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 {link.label}
@@ -40,7 +40,7 @@ export function Sidebar({ storeName }: { storeName: string }) {
       </div>
       <button
         onClick={() => signOut({ callbackUrl: "/login" })}
-        className="rounded-md px-3 py-2 text-left text-sm font-medium text-gray-500 hover:bg-gray-100"
+        className="rounded-md px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100"
       >
         Sign out
       </button>

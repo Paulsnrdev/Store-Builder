@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { uploadImage } from "@/lib/actions/upload";
+import { Button } from "@/components/ui/button";
 
 export function SingleImageUploader({
   value,
@@ -40,24 +41,19 @@ export function SingleImageUploader({
             <Image src={value} alt="" fill className="object-cover" />
           </div>
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-gray-300 text-xs text-gray-400">
+          <div className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-gray-300 text-xs text-gray-400 transition-colors">
             No image
           </div>
         )}
         <div className="space-y-1">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
+          <Button type="button" variant="secondary" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
             {uploading ? "Uploading..." : value ? "Replace" : "Upload"}
-          </button>
+          </Button>
           {value && (
             <button
               type="button"
               onClick={() => onChange(null)}
-              className="block text-xs text-red-600 hover:underline"
+              className="block text-xs text-red-600 transition-colors hover:underline"
             >
               Remove
             </button>
@@ -158,7 +154,7 @@ export function MultiImageUploader({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-gray-300 text-xs text-gray-400 hover:bg-gray-50 disabled:opacity-50"
+          className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-gray-300 text-xs text-gray-400 transition-colors hover:border-brand-400 hover:bg-brand-50 disabled:opacity-50"
         >
           {uploading ? "..." : "+ Add"}
         </button>
