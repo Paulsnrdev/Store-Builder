@@ -3,6 +3,10 @@
 import { useActionState, useState } from "react";
 import { updateStoreSettings, type SettingsFormState } from "@/lib/actions/settings";
 import { SingleImageUploader } from "@/components/dashboard/image-uploader";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type Initial = {
   name: string;
@@ -42,7 +46,7 @@ export function SettingsForm({ initial }: { initial: Initial }) {
       <input type="hidden" name="bannerUrl" value={bannerUrl ?? ""} />
 
       <label className="flex items-center gap-2 rounded-md border border-gray-200 p-3 text-sm">
-        <input type="checkbox" name="isPublished" defaultChecked={initial.isPublished} />
+        <input type="checkbox" name="isPublished" defaultChecked={initial.isPublished} className="accent-brand-600" />
         <span>
           Publish store <span className="text-gray-400">— visible at /shop/{initial.slug}</span>
         </span>
@@ -50,48 +54,33 @@ export function SettingsForm({ initial }: { initial: Initial }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Store name</label>
-        <input name="name" defaultValue={initial.name} required className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <Input name="name" defaultValue={initial.name} required className="mt-1" />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">About / description</label>
-        <textarea
-          name="description"
-          defaultValue={initial.description ?? ""}
-          rows={3}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Textarea name="description" defaultValue={initial.description ?? ""} rows={3} className="mt-1" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Phone</label>
-          <input name="phone" defaultValue={initial.phone ?? ""} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <Input name="phone" defaultValue={initial.phone ?? ""} className="mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">WhatsApp number</label>
-          <input
-            name="whatsappNumber"
-            defaultValue={initial.whatsappNumber ?? ""}
-            placeholder="+234..."
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="whatsappNumber" defaultValue={initial.whatsappNumber ?? ""} placeholder="+234..." className="mt-1" />
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Email</label>
-        <input
-          name="email"
-          type="email"
-          defaultValue={initial.email ?? ""}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input name="email" type="email" defaultValue={initial.email ?? ""} className="mt-1" />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Address</label>
-        <input name="address" defaultValue={initial.address ?? ""} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <Input name="address" defaultValue={initial.address ?? ""} className="mt-1" />
       </div>
 
       <fieldset className="space-y-4 rounded-md border border-gray-200 p-4">
@@ -101,6 +90,8 @@ export function SettingsForm({ initial }: { initial: Initial }) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Accent color</label>
+            {/* This sets the SELLER's own storefront accent color (--store-primary) —
+                unrelated to the dashboard's brand color, kept as a plain color input. */}
             <input
               name="themeColor"
               type="color"
@@ -110,14 +101,10 @@ export function SettingsForm({ initial }: { initial: Initial }) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Font</label>
-            <select
-              name="themeFont"
-              defaultValue={initial.themeFont ?? "sans"}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-            >
+            <Select name="themeFont" defaultValue={initial.themeFont ?? "sans"} className="mt-1">
               <option value="sans">Sans-serif</option>
               <option value="serif">Serif</option>
-            </select>
+            </Select>
           </div>
         </div>
       </fieldset>
@@ -125,91 +112,47 @@ export function SettingsForm({ initial }: { initial: Initial }) {
       <fieldset className="rounded-md border border-gray-200 p-4">
         <legend className="px-1 text-sm font-medium text-gray-700">Announcement bar</legend>
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="announcementEnabled" defaultChecked={initial.announcementEnabled} />
+          <input type="checkbox" name="announcementEnabled" defaultChecked={initial.announcementEnabled} className="accent-brand-600" />
           <span>Show a banner at the top of the storefront</span>
         </label>
-        <input
+        <Input
           name="announcementText"
           defaultValue={initial.announcementText ?? ""}
           placeholder="e.g. Free shipping on orders over ₦50,000"
-          className="mt-3 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="mt-3"
         />
       </fieldset>
 
       <fieldset className="space-y-3 rounded-md border border-gray-200 p-4">
         <legend className="px-1 text-sm font-medium text-gray-700">Social links</legend>
-        <input
-          name="socialInstagram"
-          defaultValue={initial.socialInstagram ?? ""}
-          placeholder="Instagram URL"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-        <input
-          name="socialFacebook"
-          defaultValue={initial.socialFacebook ?? ""}
-          placeholder="Facebook URL"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-        <input
-          name="socialTwitter"
-          defaultValue={initial.socialTwitter ?? ""}
-          placeholder="X / Twitter URL"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-        <input
-          name="socialTiktok"
-          defaultValue={initial.socialTiktok ?? ""}
-          placeholder="TikTok URL"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input name="socialInstagram" defaultValue={initial.socialInstagram ?? ""} placeholder="Instagram URL" />
+        <Input name="socialFacebook" defaultValue={initial.socialFacebook ?? ""} placeholder="Facebook URL" />
+        <Input name="socialTwitter" defaultValue={initial.socialTwitter ?? ""} placeholder="X / Twitter URL" />
+        <Input name="socialTiktok" defaultValue={initial.socialTiktok ?? ""} placeholder="TikTok URL" />
       </fieldset>
 
       <fieldset className="rounded-md border border-gray-200 p-4">
         <legend className="px-1 text-sm font-medium text-gray-700">Bank transfer details</legend>
         <p className="mb-3 text-xs text-gray-400">Shown to customers who pay by bank transfer.</p>
         <div className="space-y-3">
-          <input
-            name="bankName"
-            defaultValue={initial.bankName ?? ""}
-            placeholder="Bank name"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="bankAccountNumber"
-            defaultValue={initial.bankAccountNumber ?? ""}
-            placeholder="Account number"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="bankAccountName"
-            defaultValue={initial.bankAccountName ?? ""}
-            placeholder="Account name"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="bankName" defaultValue={initial.bankName ?? ""} placeholder="Bank name" />
+          <Input name="bankAccountNumber" defaultValue={initial.bankAccountNumber ?? ""} placeholder="Account number" />
+          <Input name="bankAccountName" defaultValue={initial.bankAccountName ?? ""} placeholder="Account name" />
         </div>
       </fieldset>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Flutterwave subaccount ID</label>
         <p className="mb-1 text-xs text-gray-400">From your Flutterwave dashboard — routes card payments directly to you.</p>
-        <input
-          name="flutterwaveSubaccountId"
-          defaultValue={initial.flutterwaveSubaccountId ?? ""}
-          placeholder="RS_xxxxxxxx"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input name="flutterwaveSubaccountId" defaultValue={initial.flutterwaveSubaccountId ?? ""} placeholder="RS_xxxxxxxx" />
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
       {state.success && <p className="text-sm text-green-700">Saved.</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Saving..." : "Save settings"}
-      </button>
+      </Button>
     </form>
   );
 }

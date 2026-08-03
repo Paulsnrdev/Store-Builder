@@ -3,6 +3,8 @@
 import { useActionState, useState } from "react";
 import { SingleImageUploader } from "@/components/dashboard/image-uploader";
 import type { CategoryFormState } from "@/lib/actions/categories";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type Action = (prev: CategoryFormState, formData: FormData) => Promise<CategoryFormState>;
 
@@ -20,13 +22,7 @@ export function CategoryForm({
     <form action={formAction} className="max-w-md space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          name="name"
-          type="text"
-          required
-          defaultValue={initial?.name}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input name="name" type="text" required defaultValue={initial?.name} className="mt-1" />
       </div>
 
       <SingleImageUploader value={imageUrl} onChange={setImageUrl} />
@@ -34,23 +30,14 @@ export function CategoryForm({
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Sort order</label>
-        <input
-          name="sortOrder"
-          type="number"
-          defaultValue={initial?.sortOrder ?? 0}
-          className="mt-1 w-32 rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input name="sortOrder" type="number" defaultValue={initial?.sortOrder ?? 0} className="mt-1 w-32" />
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Saving..." : "Save category"}
-      </button>
+      </Button>
     </form>
   );
 }

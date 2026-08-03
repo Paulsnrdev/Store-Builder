@@ -3,6 +3,8 @@
 import { useActionState, useState } from "react";
 import { NIGERIAN_STATES } from "@/lib/nigerian-states";
 import type { ShippingZoneFormState } from "@/lib/actions/shipping-zones";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type Initial = {
   name: string;
@@ -37,39 +39,17 @@ export function ShippingZoneForm({
     <form action={formAction} className="max-w-lg space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">Zone name</label>
-        <input
-          name="name"
-          defaultValue={initial.name}
-          required
-          placeholder="e.g. Lagos, South West, Rest of Nigeria"
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input name="name" defaultValue={initial.name} required placeholder="e.g. Lagos, South West, Rest of Nigeria" className="mt-1" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Shipping rate (₦)</label>
-          <input
-            name="rate"
-            type="number"
-            min="0"
-            step="0.01"
-            defaultValue={initial.rate}
-            required
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="rate" type="number" min="0" step="0.01" defaultValue={initial.rate} required className="mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Free above (₦)</label>
-          <input
-            name="freeAbove"
-            type="number"
-            min="0"
-            step="0.01"
-            defaultValue={initial.freeAbove ?? ""}
-            placeholder="Optional"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="freeAbove" type="number" min="0" step="0.01" defaultValue={initial.freeAbove ?? ""} placeholder="Optional" className="mt-1" />
         </div>
       </div>
 
@@ -81,7 +61,14 @@ export function ShippingZoneForm({
         <div className="mt-2 grid max-h-64 grid-cols-2 gap-1.5 overflow-y-auto rounded-md border border-gray-200 p-3 sm:grid-cols-3">
           {NIGERIAN_STATES.map((state) => (
             <label key={state} className="flex items-center gap-1.5 text-sm">
-              <input type="checkbox" name="states" value={state} checked={selected.has(state)} onChange={() => toggle(state)} />
+              <input
+                type="checkbox"
+                name="states"
+                value={state}
+                checked={selected.has(state)}
+                onChange={() => toggle(state)}
+                className="accent-brand-600"
+              />
               {state}
             </label>
           ))}
@@ -90,13 +77,9 @@ export function ShippingZoneForm({
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Saving..." : "Save zone"}
-      </button>
+      </Button>
     </form>
   );
 }

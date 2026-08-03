@@ -5,6 +5,9 @@ import { RichTextEditor } from "@/components/dashboard/rich-text-editor";
 import { MultiImageUploader, type ProductImageItem } from "@/components/dashboard/image-uploader";
 import { VariantEditor, type Variant } from "@/components/dashboard/variant-editor";
 import type { ProductFormState } from "@/lib/actions/products";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type Action = (prev: ProductFormState, formData: FormData) => Promise<ProductFormState>;
 
@@ -44,13 +47,7 @@ export function ProductForm({
     <form action={formAction} className="max-w-2xl space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          name="name"
-          type="text"
-          required
-          defaultValue={initial?.name}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input name="name" type="text" required defaultValue={initial?.name} className="mt-1" />
       </div>
 
       <div>
@@ -62,24 +59,20 @@ export function ProductForm({
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Category</label>
-        <select
-          name="categoryId"
-          defaultValue={initial?.categoryId ?? ""}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        >
+        <Select name="categoryId" defaultValue={initial?.categoryId ?? ""} className="mt-1">
           <option value="">No category</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Price (₦)</label>
-          <input
+          <Input
             name="price"
             type="number"
             step="0.01"
@@ -87,53 +80,27 @@ export function ProductForm({
             required
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="mt-1"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Compare-at price</label>
-          <input
-            name="compareAtPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={initial?.compareAtPrice ?? ""}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="compareAtPrice" type="number" step="0.01" min="0" defaultValue={initial?.compareAtPrice ?? ""} className="mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Cost price</label>
-          <input
-            name="costPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={initial?.costPrice ?? ""}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="costPrice" type="number" step="0.01" min="0" defaultValue={initial?.costPrice ?? ""} className="mt-1" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">SKU</label>
-          <input
-            name="sku"
-            type="text"
-            defaultValue={initial?.sku ?? ""}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="sku" type="text" defaultValue={initial?.sku ?? ""} className="mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
-          <input
-            name="weight"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={initial?.weight ?? ""}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="weight" type="number" step="0.01" min="0" defaultValue={initial?.weight ?? ""} className="mt-1" />
         </div>
       </div>
 
@@ -147,29 +114,22 @@ export function ProductForm({
             name="trackInventory"
             defaultChecked={initial?.trackInventory ?? true}
             onChange={(e) => setTrackInventory(e.target.checked)}
+            className="accent-brand-600"
           />
           Track inventory
         </label>
         {trackInventory && (
-          <div>
-            <input
-              name="stockQuantity"
-              type="number"
-              min="0"
-              defaultValue={initial?.stockQuantity ?? 0}
-              className="w-24 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-            />
-          </div>
+          <Input name="stockQuantity" type="number" min="0" defaultValue={initial?.stockQuantity ?? 0} className="w-24 py-1.5" />
         )}
       </div>
 
       <div className="flex items-center gap-6">
         <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input type="checkbox" name="isActive" defaultChecked={initial?.isActive ?? true} />
+          <input type="checkbox" name="isActive" defaultChecked={initial?.isActive ?? true} className="accent-brand-600" />
           Active (visible in store)
         </label>
         <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input type="checkbox" name="isFeatured" defaultChecked={initial?.isFeatured ?? false} />
+          <input type="checkbox" name="isFeatured" defaultChecked={initial?.isFeatured ?? false} className="accent-brand-600" />
           Featured
         </label>
       </div>
@@ -185,13 +145,9 @@ export function ProductForm({
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Saving..." : "Save product"}
-      </button>
+      </Button>
     </form>
   );
 }
