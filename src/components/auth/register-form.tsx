@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { signIn } from "next-auth/react";
 import { registerSeller, type RegisterState } from "@/lib/actions/auth";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const initialState: RegisterState = {};
 
@@ -11,11 +13,7 @@ export function RegisterForm() {
 
   return (
     <>
-      <button
-        onClick={() => signIn("google", { callbackUrl: "/register" })}
-        type="button"
-        className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-      >
+      <Button variant="secondary" onClick={() => signIn("google", { callbackUrl: "/register" })} type="button" className="w-full">
         <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
           <path
             fill="#FFC107"
@@ -35,7 +33,7 @@ export function RegisterForm() {
           />
         </svg>
         Continue with Google
-      </button>
+      </Button>
 
       <div className="my-6 flex items-center gap-3 text-xs text-gray-400">
         <div className="h-px flex-1 bg-gray-200" />
@@ -46,53 +44,24 @@ export function RegisterForm() {
       <form action={formAction} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Your name</label>
-          <input
-            name="name"
-            type="text"
-            required
-            placeholder="e.g. Segun Ajayi"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="name" type="text" required placeholder="e.g. Segun Ajayi" className="mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            name="email"
-            type="email"
-            required
-            placeholder="you@email.com"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="email" type="email" required placeholder="you@email.com" className="mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Password</label>
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            placeholder="At least 8 characters"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="password" type="password" required minLength={8} placeholder="At least 8 characters" className="mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Store name</label>
-          <input
-            name="storeName"
-            type="text"
-            required
-            placeholder="e.g. Chunkz"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
+          <Input name="storeName" type="text" required placeholder="e.g. Chunkz" className="mt-1" />
         </div>
         {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={pending} className="w-full">
           {pending ? "Creating..." : "Create store"}
-        </button>
+        </Button>
       </form>
     </>
   );

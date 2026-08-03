@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { RegisterForm } from "@/components/auth/register-form";
 import { CompleteStoreForm } from "@/components/auth/complete-store-form";
+import { AuthCard } from "@/components/auth/auth-card";
 
 export default async function RegisterPage() {
   const session = await auth();
@@ -17,34 +18,21 @@ export default async function RegisterPage() {
     if (existingStore) redirect("/dashboard");
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-sm space-y-6 rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Almost there</h1>
-          </div>
-          <CompleteStoreForm name={session.user.name ?? session.user.email ?? "there"} />
-        </div>
-      </div>
+      <AuthCard title="Almost there">
+        <CompleteStoreForm name={session.user.name ?? session.user.email ?? "there"} />
+      </AuthCard>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Create your store</h1>
-          <p className="mt-1 text-sm text-gray-500">Start selling in minutes</p>
-        </div>
-
-        <RegisterForm />
-
-        <p className="text-center text-sm text-gray-500">
-          Already have an account?{" "}
-          <Link href="/login" className="font-medium text-gray-900 underline">
-            Sign in
-          </Link>
-        </p>
-      </div>
-    </div>
+    <AuthCard title="Create your store" description="Start selling in minutes">
+      <RegisterForm />
+      <p className="text-center text-sm text-gray-500">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-brand-600 hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </AuthCard>
   );
 }
