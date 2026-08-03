@@ -14,12 +14,12 @@ export const CYCLE_LABEL: Record<Cycle, string> = {
 export const CYCLE_DISCOUNT: Record<Cycle, number> = { MONTHLY: 0, BIANNUAL: 0.1, YEARLY: 0.2 };
 export const CYCLE_MONTHS: Record<Cycle, number> = { MONTHLY: 1, BIANNUAL: 6, YEARLY: 12 };
 
-// Flutterwave's Payment Plan `interval` field. NOTE: "biannually" is Flutterwave's
-// documented interval value for a 6-month cycle as of this writing — verify against
-// their current API docs before relying on it, since this couldn't be tested live.
+// Flutterwave's Payment Plan `interval` field — confirmed against their current API
+// docs (developer.flutterwave.com/v3.0/docs/payment-plans-1): a 6-month cycle is
+// "bi-annually" (hyphenated), not "biannually".
 export const FLUTTERWAVE_INTERVAL: Record<Cycle, string> = {
   MONTHLY: "monthly",
-  BIANNUAL: "biannually",
+  BIANNUAL: "bi-annually",
   YEARLY: "yearly",
 };
 

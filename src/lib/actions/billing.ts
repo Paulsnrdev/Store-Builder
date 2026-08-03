@@ -55,9 +55,12 @@ export async function subscribeToPlan(planSlug: string, cycle: Cycle): Promise<S
 
   const amount = cycleAmount(Number(plan.monthlyPrice), cycle);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  // Prefixed so the webhook can recognize this as a subscription charge (vs. a buyer order)
-  // and pull the storeId straight out of it for the very first charge on a new plan pick.
-  const txRef = `SUB-${store.id}-${Date.now()}`;
+  // Flutterwave's charge.completed webhook doesn't reliably echo back which payment
+  // plan a charge belongs to, so we can't rely on that to activate the subscription.
+  // Instead we embed everything the webhook needs directly in our own tx_ref: storeId,
+  // plan slug, and cycle. storeId (cuid) and slug (kebab-case) never contain "_", so
+  // splitting on it is unambiguous. See handleNewSubscriptionCharge in the webhook route.
+  const txRef = `SUB_${store.id}_${plan.slug}_${cycle}_${Date.now()}`;
 
   const result = await initializeTransaction({
     email: store.email,

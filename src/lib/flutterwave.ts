@@ -113,7 +113,9 @@ export async function createPaymentPlan(input: CreatePaymentPlanInput): Promise<
   return { ok: true, planId: json.data.id.toString() };
 }
 
-type FlutterwaveSubscription = { id: number; email: string; amount: number; status: string };
+// Field names confirmed against developer.flutterwave.com/v3.0/reference/get-all-subscriptions —
+// the email is nested under `customer.customer_email`, not a top-level `email` field.
+type FlutterwaveSubscription = { id: number; customer: { customer_email: string }; amount: number; status: string };
 
 /** Looks up a customer's active Flutterwave subscription to a given payment plan, so we can cancel it. */
 export async function findActiveFlutterwaveSubscription(flutterwavePlanId: string, email: string): Promise<FlutterwaveSubscription | null> {
@@ -127,7 +129,7 @@ export async function findActiveFlutterwaveSubscription(flutterwavePlanId: strin
   if (!res.ok || json.status !== "success" || !Array.isArray(json.data)) return null;
 
   const match = (json.data as FlutterwaveSubscription[]).find(
-    (s) => s.email.toLowerCase() === email.toLowerCase() && s.status === "active"
+    (s) => s.customer?.customer_email?.toLowerCase() === email.toLowerCase() && s.status === "active"
   );
   return match ?? null;
 }
