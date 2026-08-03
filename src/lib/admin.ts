@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/store";
+import { hasValidAdminSession } from "@/lib/admin-auth";
 
 export async function requireAdmin() {
-  const session = await requireSession();
-  if (session.user.role !== "ADMIN") redirect("/dashboard");
-  return session;
+  if (!(await hasValidAdminSession())) redirect("/admin/login");
 }

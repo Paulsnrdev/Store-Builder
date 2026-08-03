@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { adminLogout } from "@/lib/actions/admin-auth";
 
 const links = [
   { href: "/admin", label: "Overview" },
@@ -35,15 +35,14 @@ export function AdminSidebar() {
         </nav>
       </div>
       <div className="space-y-1">
-        <Link href="/dashboard" className="block rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100">
-          Back to dashboard
-        </Link>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-gray-500 hover:bg-gray-100"
-        >
-          Sign out
-        </button>
+        <form action={adminLogout}>
+          <button
+            type="submit"
+            className="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-gray-500 hover:bg-gray-100"
+          >
+            Sign out
+          </button>
+        </form>
       </div>
     </div>
   );

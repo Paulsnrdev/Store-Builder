@@ -11,12 +11,11 @@ export default auth((req) => {
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
-
-  if (req.nextUrl.pathname.startsWith("/admin") && req.auth?.user?.role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
-  }
 });
 
+// /admin is gated separately by its own shared-password session (see
+// src/lib/admin.ts / src/lib/admin-auth.ts), not the seller NextAuth session —
+// it must stay reachable without a seller login at all.
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*"],
 };
