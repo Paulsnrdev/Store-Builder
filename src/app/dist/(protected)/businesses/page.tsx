@@ -51,7 +51,7 @@ export default async function AdminBusinessesPage({
           Filter
         </button>
         {(q || status) && (
-          <Link href="/admin/businesses" className="text-sm text-gray-500 hover:underline">
+          <Link href="/dist/businesses" className="text-sm text-gray-500 hover:underline">
             Clear
           </Link>
         )}
@@ -73,7 +73,7 @@ export default async function AdminBusinessesPage({
             {stores.map((store) => (
               <tr key={store.id}>
                 <td className="px-4 py-3">
-                  <Link href={`/admin/businesses/${store.id}`} className="font-medium text-gray-900 hover:underline">
+                  <Link href={`/dist/businesses/${store.id}`} className="font-medium text-gray-900 hover:underline">
                     {store.name}
                   </Link>
                   <div className="text-xs text-gray-400">/shop/{store.slug}</div>
@@ -102,7 +102,7 @@ export default async function AdminBusinessesPage({
                   {store.createdAt.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Link href={`/admin/businesses/${store.id}`} className="font-medium text-gray-600 hover:underline">
+                  <Link href={`/dist/businesses/${store.id}`} className="font-medium text-gray-600 hover:underline">
                     Manage
                   </Link>
                 </td>

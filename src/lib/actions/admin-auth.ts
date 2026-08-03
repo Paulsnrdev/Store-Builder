@@ -15,10 +15,10 @@ export async function adminLogin(_prev: AdminLoginState, formData: FormData): Pr
   }
 
   await setAdminSessionCookie();
-  redirect("/admin");
+  redirect("/dist");
 }
 
 export async function adminLogout() {
   await clearAdminSessionCookie();
-  redirect("/admin/login");
+  redirect("/dist/login");
 }

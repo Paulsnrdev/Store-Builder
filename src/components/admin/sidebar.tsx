@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { adminLogout } from "@/lib/actions/admin-auth";
 
 const links = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/businesses", label: "Businesses" },
-  { href: "/admin/plans", label: "Plans" },
+  { href: "/dist", label: "Overview" },
+  { href: "/dist/businesses", label: "Businesses" },
+  { href: "/dist/plans", label: "Plans" },
 ];
 
 export function AdminSidebar() {
@@ -19,7 +19,7 @@ export function AdminSidebar() {
         <div className="mb-6 px-2 text-lg font-semibold text-gray-900">Admin</div>
         <nav className="space-y-1">
           {links.map((link) => {
-            const active = link.href === "/admin" ? pathname === link.href : pathname.startsWith(link.href);
+            const active = link.href === "/dist" ? pathname === link.href : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}

@@ -32,8 +32,8 @@ export async function updateStoreDetailsAdmin(storeId: string, _prev: AdminFormS
 
   await prisma.store.update({ where: { id: storeId }, data: parsed.data });
 
-  revalidatePath(`/admin/businesses/${storeId}`);
-  revalidatePath("/admin/businesses");
+  revalidatePath(`/dist/businesses/${storeId}`);
+  revalidatePath("/dist/businesses");
   return { success: true };
 }
 
@@ -52,8 +52,8 @@ export async function suspendStore(storeId: string, _prev: AdminFormState, formD
     data: { isSuspended: true, suspendedAt: new Date(), suspendedReason: parsed.data.reason },
   });
 
-  revalidatePath(`/admin/businesses/${storeId}`);
-  revalidatePath("/admin/businesses");
+  revalidatePath(`/dist/businesses/${storeId}`);
+  revalidatePath("/dist/businesses");
   return { success: true };
 }
 
@@ -65,8 +65,8 @@ export async function activateStore(storeId: string) {
     data: { isSuspended: false, suspendedAt: null, suspendedReason: null },
   });
 
-  revalidatePath(`/admin/businesses/${storeId}`);
-  revalidatePath("/admin/businesses");
+  revalidatePath(`/dist/businesses/${storeId}`);
+  revalidatePath("/dist/businesses");
 }
 
 const assignPlanSchema = z.object({
@@ -100,14 +100,14 @@ export async function assignStorePlan(storeId: string, _prev: AdminFormState, fo
     create: { storeId, ...data },
   });
 
-  revalidatePath(`/admin/businesses/${storeId}`);
-  revalidatePath("/admin/businesses");
+  revalidatePath(`/dist/businesses/${storeId}`);
+  revalidatePath("/dist/businesses");
   return { success: true };
 }
 
 export async function deleteStoreAdmin(storeId: string) {
   await requireAdmin();
   await prisma.store.delete({ where: { id: storeId } });
-  revalidatePath("/admin/businesses");
-  redirect("/admin/businesses");
+  revalidatePath("/dist/businesses");
+  redirect("/dist/businesses");
 }

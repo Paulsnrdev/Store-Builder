@@ -55,8 +55,8 @@ export async function createPlan(_prev: PlanFormState, formData: FormData): Prom
 
   await prisma.plan.create({ data: { ...parsed.data, slug } });
 
-  revalidatePath("/admin/plans");
-  redirect("/admin/plans");
+  revalidatePath("/dist/plans");
+  redirect("/dist/plans");
 }
 
 export async function updatePlan(id: string, _prev: PlanFormState, formData: FormData): Promise<PlanFormState> {
@@ -72,19 +72,19 @@ export async function updatePlan(id: string, _prev: PlanFormState, formData: For
 
   await prisma.plan.update({ where: { id }, data: { ...parsed.data, slug } });
 
-  revalidatePath("/admin/plans");
-  redirect("/admin/plans");
+  revalidatePath("/dist/plans");
+  redirect("/dist/plans");
 }
 
 export async function togglePlanActive(id: string) {
   await requireAdmin();
   const plan = await prisma.plan.findUniqueOrThrow({ where: { id } });
   await prisma.plan.update({ where: { id }, data: { isActive: !plan.isActive } });
-  revalidatePath("/admin/plans");
+  revalidatePath("/dist/plans");
 }
 
 export async function deletePlan(id: string) {
   await requireAdmin();
   await prisma.plan.deleteMany({ where: { id, subscriptions: { none: {} } } });
-  revalidatePath("/admin/plans");
+  revalidatePath("/dist/plans");
 }

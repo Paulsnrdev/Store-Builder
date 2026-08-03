@@ -16,7 +16,7 @@ export const getCurrentStore = cache(async () => {
     orderBy: { createdAt: "asc" },
     include: { subscription: { include: { plan: true } } },
   });
-  if (!store) redirect(session.user.role === "ADMIN" ? "/admin" : "/register");
+  if (!store) redirect(session.user.role === "ADMIN" ? "/dist" : "/register");
   if (store.isSuspended) redirect("/suspended");
   return store;
 });

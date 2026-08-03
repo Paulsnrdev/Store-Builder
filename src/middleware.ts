@@ -13,9 +13,9 @@ export default auth((req) => {
   }
 });
 
-// /admin is gated separately by its own shared-password session (see
-// src/lib/admin.ts / src/lib/admin-auth.ts), not the seller NextAuth session —
-// it must stay reachable without a seller login at all.
+// /dist (the admin panel) is gated separately by its own shared-password
+// session (see src/lib/admin.ts / src/lib/admin-auth.ts), not the seller
+// NextAuth session — it must stay reachable without a seller login at all.
 export const config = {
   matcher: ["/dashboard/:path*"],
 };

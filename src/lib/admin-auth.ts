@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import crypto from "node:crypto";
 
-// A single shared password gates /admin — no per-person account, no database
+// A single shared password gates /dist (the admin panel) — no per-person account, no database
 // row, no scripts to create one. Set ADMIN_PASSWORD in the environment; the
 // signed session cookie below reuses AUTH_SECRET (already required for
 // NextAuth) rather than needing a second secret.
