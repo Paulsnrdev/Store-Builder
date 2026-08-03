@@ -76,12 +76,7 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <Link href="/forgot-password" className="text-sm font-medium text-brand-600 hover:underline">
-              Forgot password?
-            </Link>
-          </div>
+          <label className="block text-sm font-medium text-gray-700">Password</label>
           <Input
             type="password"
             required
@@ -95,6 +90,11 @@ export function LoginForm() {
         <Button type="submit" disabled={loading} className="w-full">
           {loading ? "Signing in..." : "Sign in"}
         </Button>
+        <p className="text-center text-sm">
+          <Link href="/forgot-password" className="font-medium text-brand-600 hover:underline">
+            Forgot password?
+          </Link>
+        </p>
       </form>
 
       <p className="text-center text-sm text-gray-500">
