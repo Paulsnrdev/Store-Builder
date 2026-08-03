@@ -12,6 +12,7 @@ const links = [
   { href: "/dashboard/orders", label: "Orders" },
   { href: "/dashboard/customers", label: "Customers" },
   { href: "/dashboard/shipping", label: "Shipping" },
+  { href: "/dashboard/billing", label: "Billing" },
   { href: "/dashboard/settings", label: "Settings" },
 ];
 
@@ -40,7 +41,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
 function PlanBadge({ planName }: { planName: string }) {
   return (
     <Link
-      href="/#pricing"
+      href="/dashboard/billing"
       className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100"
     >
       {planName} plan

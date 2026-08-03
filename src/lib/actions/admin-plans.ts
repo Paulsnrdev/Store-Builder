@@ -15,17 +15,20 @@ const planSchema = z.object({
   monthlyPrice: z.coerce.number().min(0),
   yearlyPrice: z.coerce.number().min(0),
   currency: z.string().min(1).default("NGN"),
+  productLimit: z.coerce.number().int().positive().nullable().optional(),
   isActive: z.coerce.boolean().default(true),
   sortOrder: z.coerce.number().int().default(0),
 });
 
 function parsePlanForm(formData: FormData) {
+  const productLimitRaw = formData.get("productLimit");
   return planSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") || null,
     monthlyPrice: formData.get("monthlyPrice"),
     yearlyPrice: formData.get("yearlyPrice"),
     currency: formData.get("currency") || "NGN",
+    productLimit: productLimitRaw ? productLimitRaw : null,
     isActive: formData.get("isActive") === "on",
     sortOrder: formData.get("sortOrder") ?? 0,
   });

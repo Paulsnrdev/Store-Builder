@@ -2,19 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-
-type Cycle = "monthly" | "biannual" | "annual";
-
-const CYCLE_LABEL: Record<Cycle, string> = {
-  monthly: "Monthly",
-  biannual: "Every 6 months",
-  annual: "Yearly",
-};
-
-// Discretionary discount off the monthly rate for committing longer — a common
-// SaaS convention (~10% for a half-year commitment, ~20% for a full year).
-const CYCLE_DISCOUNT: Record<Cycle, number> = { monthly: 0, biannual: 0.1, annual: 0.2 };
-const CYCLE_MONTHS: Record<Cycle, number> = { monthly: 1, biannual: 6, annual: 12 };
+import { CYCLE_LABEL, CYCLE_DISCOUNT, CYCLE_MONTHS, type Cycle } from "@/lib/billing-cycles";
 
 type Plan = {
   name: string;
@@ -88,7 +76,7 @@ function formatNaira(n: number) {
 }
 
 export function PricingSection() {
-  const [cycle, setCycle] = useState<Cycle>("monthly");
+  const [cycle, setCycle] = useState<Cycle>("MONTHLY");
 
   return (
     <section id="pricing" className="border-t border-gray-100 bg-gray-50 px-4 py-16">
@@ -107,7 +95,7 @@ export function PricingSection() {
               }`}
             >
               {CYCLE_LABEL[c]}
-              {c !== "monthly" && <span className="ml-1 text-xs opacity-80">−{CYCLE_DISCOUNT[c] * 100}%</span>}
+              {c !== "MONTHLY" && <span className="ml-1 text-xs opacity-80">−{CYCLE_DISCOUNT[c] * 100}%</span>}
             </button>
           ))}
         </div>
@@ -142,7 +130,7 @@ export function PricingSection() {
                         {formatNaira(effectiveMonthly)}
                         <span className="text-sm font-normal text-gray-500">/mo</span>
                       </p>
-                      {cycle !== "monthly" && (
+                      {cycle !== "MONTHLY" && (
                         <p className="mt-0.5 text-xs text-gray-500">
                           Billed {formatNaira(billedTotal)} every {CYCLE_MONTHS[cycle]} months
                         </p>

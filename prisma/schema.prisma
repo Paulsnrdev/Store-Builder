@@ -362,8 +362,19 @@ model Plan {
   yearlyPrice  Decimal  @db.Decimal(10, 2)
   currency     String   @default("NGN")
   features     Json?
+  // Max products a store on this plan may have. null = unlimited. Stores with
+  // no Subscription row at all (the default for new signups) fall back to the
+  // hardcoded FREE_PRODUCT_LIMIT in src/lib/plan-limits.ts, not a DB row here.
+  productLimit Int?
   isActive     Boolean  @default(true)
   sortOrder    Int      @default(0)
+
+  // Flutterwave "Payment Plan" IDs, one per billing interval, created lazily
+  // (self-provisioned) the first time a seller subscribes at that cycle — see
+  // getOrCreateFlutterwavePlanId in src/lib/actions/billing.ts.
+  flutterwaveMonthlyPlanId  String?
+  flutterwaveBiannualPlanId String?
+  flutterwaveAnnualPlanId   String?
 
   subscriptions Subscription[]
 
@@ -384,14 +395,35 @@ model Subscription {
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
   plan  Plan  @relation(fields: [planId], references: [id], onDelete: Restrict)
 
+  payments SubscriptionPayment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([planId])
 }
 
+// One row per successful Flutterwave charge (initial subscribe or each
+// recurring auto-renewal) — gives idempotency on tx_ref for the webhook and a
+// payment history.
+model SubscriptionPayment {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  txRef          String   @unique
+  amount         Decimal  @db.Decimal(10, 2)
+  currency       String
+  status         String
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([subscriptionId])
+}
+
 enum BillingInterval {
   MONTHLY
+  BIANNUAL
   YEARLY
 }
 

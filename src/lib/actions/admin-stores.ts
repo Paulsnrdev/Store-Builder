@@ -71,7 +71,7 @@ export async function activateStore(storeId: string) {
 
 const assignPlanSchema = z.object({
   planId: z.string().min(1),
-  interval: z.enum(["MONTHLY", "YEARLY"]),
+  interval: z.enum(["MONTHLY", "BIANNUAL", "YEARLY"]),
   status: z.enum(["TRIALING", "ACTIVE", "PAST_DUE", "CANCELED"]),
   currentPeriodEnd: z.string().optional(),
 });

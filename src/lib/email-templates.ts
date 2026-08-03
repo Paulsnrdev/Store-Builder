@@ -73,3 +73,34 @@ export function sellerOrderPaidEmail(data: OrderEmailData) {
     ),
   };
 }
+
+type SubscriptionEmailData = { storeName: string; planName: string };
+
+/** A plan subscription became active — first charge or a renewal. */
+export function sellerSubscriptionActiveEmail(data: SubscriptionEmailData & { currentPeriodEnd: Date | null }) {
+  return {
+    subject: `You're on the ${data.planName} plan — StoreHike`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2>You're on the ${data.planName} plan</h2>
+        <p>Thanks for upgrading, ${data.storeName}! Your subscription is active${
+          data.currentPeriodEnd ? ` and renews on ${data.currentPeriodEnd.toLocaleDateString()}` : ""
+        }.</p>
+      </div>
+    `,
+  };
+}
+
+export function sellerSubscriptionCanceledEmail(data: SubscriptionEmailData & { accessUntil: Date | null }) {
+  return {
+    subject: `Your ${data.planName} plan was canceled — StoreHike`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2>Subscription canceled</h2>
+        <p>Your ${data.planName} plan for ${data.storeName} has been canceled and won't renew.${
+          data.accessUntil ? ` You'll keep your plan's features until ${data.accessUntil.toLocaleDateString()}.` : ""
+        }</p>
+      </div>
+    `,
+  };
+}

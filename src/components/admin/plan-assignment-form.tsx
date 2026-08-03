@@ -46,6 +46,7 @@ export function PlanAssignmentForm({
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="MONTHLY">Monthly</option>
+            <option value="BIANNUAL">Every 6 months</option>
             <option value="YEARLY">Yearly</option>
           </select>
         </div>

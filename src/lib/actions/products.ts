@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { slugify } from "@/lib/slugify";
+import { getProductLimit } from "@/lib/plan-limits";
 
 const variantSchema = z.object({
   name: z.string().min(1),
@@ -89,6 +90,14 @@ export async function createProduct(_prev: ProductFormState, formData: FormData)
   const parsed = parseProductForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   const data = parsed.data;
+
+  const limit = getProductLimit(store.subscription);
+  if (limit !== null) {
+    const count = await prisma.product.count({ where: { storeId: store.id } });
+    if (count >= limit) {
+      return { error: `You've reached your plan's limit of ${limit} products. Upgrade your plan to add more.` };
+    }
+  }
 
   const slug = await uniqueProductSlug(store.id, data.name);
   const sku = await uniqueProductSku(store.id, data.sku);

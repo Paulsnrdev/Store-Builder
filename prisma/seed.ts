@@ -372,33 +372,32 @@ async function main() {
     },
   });
 
-  await prisma.plan.upsert({
-    where: { slug: "starter" },
-    update: {},
-    create: {
-      name: "Starter",
-      slug: "starter",
-      description: "For sellers just getting started.",
-      monthlyPrice: 5000,
-      yearlyPrice: 50000,
-      currency: "NGN",
-      sortOrder: 0,
-    },
-  });
+  // Mirrors the tiers/prices/limits shown on the homepage pricing section
+  // (src/components/marketing/pricing-section.tsx). "Free" has no row here —
+  // a store with no Subscription at all is treated as Free by default; see
+  // FREE_PRODUCT_LIMIT in src/lib/plan-limits.ts.
+  const paidPlans = [
+    { name: "Lite", slug: "lite", monthlyPrice: 3900, productLimit: 20, sortOrder: 1 },
+    { name: "Basic", slug: "basic", monthlyPrice: 5200, productLimit: 100, sortOrder: 2 },
+    { name: "Growth", slug: "growth", monthlyPrice: 7600, productLimit: 1000, sortOrder: 3 },
+    { name: "Business", slug: "business", monthlyPrice: 11000, productLimit: null, sortOrder: 4 },
+  ];
 
-  await prisma.plan.upsert({
-    where: { slug: "growth" },
-    update: {},
-    create: {
-      name: "Growth",
-      slug: "growth",
-      description: "For sellers scaling up order volume.",
-      monthlyPrice: 15000,
-      yearlyPrice: 150000,
-      currency: "NGN",
-      sortOrder: 1,
-    },
-  });
+  for (const p of paidPlans) {
+    await prisma.plan.upsert({
+      where: { slug: p.slug },
+      update: {},
+      create: {
+        name: p.name,
+        slug: p.slug,
+        monthlyPrice: p.monthlyPrice,
+        yearlyPrice: p.monthlyPrice * 12 * 0.8, // matches the 20% annual discount shown on the pricing page
+        currency: "NGN",
+        productLimit: p.productLimit,
+        sortOrder: p.sortOrder,
+      },
+    });
+  }
 
   console.log(`\nSeed complete. Store: ${store.name} (${store.slug})`);
   console.log(`Demo login: demo@storehike.ng / password123`);

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature, verifyTransaction } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
-import { customerOrderPaidEmail, sellerOrderPaidEmail } from "@/lib/email-templates";
+import { customerOrderPaidEmail, sellerOrderPaidEmail, sellerSubscriptionActiveEmail } from "@/lib/email-templates";
+import { addCycle, type Cycle } from "@/lib/billing-cycles";
 
 export async function POST(req: Request) {
   const rawBody = await req.text();
@@ -21,6 +22,13 @@ export async function POST(req: Request) {
   const txRef: string | undefined = event.data?.tx_ref;
   const transactionId: string | undefined = event.data?.id?.toString();
   if (!txRef || !transactionId) return NextResponse.json({ received: true });
+
+  // StoreHike plan subscription charges (self-serve upgrade or a recurring auto-renewal),
+  // as opposed to a buyer paying for an order — handled entirely separately below.
+  if (txRef.startsWith("SUB-") || event.data?.payment_plan) {
+    await handleSubscriptionCharge(event.data, transactionId);
+    return NextResponse.json({ received: true });
+  }
 
   const order = await prisma.order.findFirst({
     where: { flutterwaveTxRef: txRef },
@@ -76,4 +84,87 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+/**
+ * Activates or renews a StoreHike plan subscription off a successful Flutterwave charge.
+ *
+ * NOTE: the exact shape of `event.data.payment_plan` on a Flutterwave webhook payload —
+ * and whether recurring auto-charges reuse or regenerate `tx_ref` — could not be verified
+ * against a live payload from this environment. This follows Flutterwave's documented
+ * Payment Plan behavior; confirm against a real test renewal before relying on it.
+ */
+async function handleSubscriptionCharge(data: Record<string, unknown>, transactionId: string) {
+  const txRef = data.tx_ref as string;
+  const paymentPlanId = data.payment_plan != null ? String(data.payment_plan) : undefined;
+  const customerEmail = (data.customer as { email?: string } | undefined)?.email;
+
+  // Idempotent: a replayed webhook delivery for a charge we've already logged is a no-op.
+  const alreadyLogged = await prisma.subscriptionPayment.findUnique({ where: { txRef } });
+  if (alreadyLogged) return;
+
+  const verified = await verifyTransaction(transactionId);
+  if (!verified || verified.status !== "successful") return;
+
+  let subscription: Awaited<ReturnType<typeof prisma.subscription.update>> & {
+    plan: { name: string };
+    store: { name: string; email: string | null };
+  };
+
+  if (!paymentPlanId) return;
+
+  const plan = await prisma.plan.findFirst({
+    where: {
+      OR: [
+        { flutterwaveMonthlyPlanId: paymentPlanId },
+        { flutterwaveBiannualPlanId: paymentPlanId },
+        { flutterwaveAnnualPlanId: paymentPlanId },
+      ],
+    },
+  });
+  if (!plan) return;
+
+  const interval = (
+    plan.flutterwaveMonthlyPlanId === paymentPlanId ? "MONTHLY" : plan.flutterwaveBiannualPlanId === paymentPlanId ? "BIANNUAL" : "YEARLY"
+  ) as Cycle;
+
+  if (txRef.startsWith("SUB-")) {
+    // Our own tx_ref (SUB-<storeId>-<timestamp>) — the first charge for a newly picked plan.
+    const storeId = txRef.split("-")[1];
+    subscription = await prisma.subscription.upsert({
+      where: { storeId },
+      update: { planId: plan.id, interval, status: "ACTIVE", currentPeriodEnd: addCycle(new Date(), interval), canceledAt: null },
+      create: { storeId, planId: plan.id, interval, status: "ACTIVE", currentPeriodEnd: addCycle(new Date(), interval) },
+      include: { plan: true, store: true },
+    });
+  } else {
+    // A recurring auto-charge Flutterwave triggered on its own schedule — no tx_ref of ours
+    // to key off, so match by which plan was charged and whose billing email it belongs to.
+    if (!customerEmail) return;
+    const existing = await prisma.subscription.findFirst({
+      where: { planId: plan.id, store: { email: customerEmail } },
+      include: { plan: true, store: true },
+    });
+    if (!existing) return;
+    subscription = await prisma.subscription.update({
+      where: { id: existing.id },
+      data: { status: "ACTIVE", currentPeriodEnd: addCycle(new Date(), existing.interval as Cycle), canceledAt: null },
+      include: { plan: true, store: true },
+    });
+  }
+
+  await prisma.subscriptionPayment.create({
+    data: { subscriptionId: subscription.id, txRef, amount: verified.amount, currency: verified.currency, status: "successful" },
+  });
+
+  if (subscription.store.email) {
+    await sendEmail({
+      to: subscription.store.email,
+      ...sellerSubscriptionActiveEmail({
+        storeName: subscription.store.name,
+        planName: subscription.plan.name,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+      }),
+    });
+  }
 }
