@@ -37,7 +37,18 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   );
 }
 
-export function Sidebar({ storeName }: { storeName: string }) {
+function PlanBadge({ planName }: { planName: string }) {
+  return (
+    <Link
+      href="/#pricing"
+      className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100"
+    >
+      {planName} plan
+    </Link>
+  );
+}
+
+export function Sidebar({ storeName, planName }: { storeName: string; planName: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -46,7 +57,10 @@ export function Sidebar({ storeName }: { storeName: string }) {
       {/* Desktop/tablet sidebar */}
       <aside className="hidden w-60 shrink-0 border-r border-gray-200 bg-white sm:flex sm:flex-col sm:justify-between sm:p-4 print:hidden">
         <div>
-          <div className="mb-6 px-2 text-lg font-semibold text-gray-900">{storeName}</div>
+          <div className="mb-1 px-2 text-lg font-semibold text-gray-900">{storeName}</div>
+          <div className="mb-6 px-2">
+            <PlanBadge planName={planName} />
+          </div>
           <NavLinks pathname={pathname} />
         </div>
         <button
@@ -69,7 +83,12 @@ export function Sidebar({ storeName }: { storeName: string }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
           </svg>
         </button>
-        <span className="text-base font-semibold text-gray-900">{storeName}</span>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-base font-semibold text-gray-900">{storeName}</span>
+        </div>
+        <div className="ml-auto">
+          <PlanBadge planName={planName} />
+        </div>
       </div>
 
       {/* Mobile off-canvas drawer */}

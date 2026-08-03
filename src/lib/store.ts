@@ -14,6 +14,7 @@ export const getCurrentStore = cache(async () => {
   const store = await prisma.store.findFirst({
     where: { userId: session.user.id },
     orderBy: { createdAt: "asc" },
+    include: { subscription: { include: { plan: true } } },
   });
   if (!store) redirect(session.user.role === "ADMIN" ? "/admin" : "/register");
   if (store.isSuspended) redirect("/suspended");
