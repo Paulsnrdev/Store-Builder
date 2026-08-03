@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PricingSection } from "@/components/marketing/pricing-section";
 
 const FEATURES = [
   {
@@ -93,6 +94,8 @@ export default function MarketingHomePage() {
           </div>
         </div>
       </section>
+
+      <PricingSection />
 
       <footer className="border-t border-gray-100 px-4 py-8 text-center text-xs text-gray-400">
         StoreHike — hosted storefronts for Instagram &amp; WhatsApp sellers.
