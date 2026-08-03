@@ -8,6 +8,7 @@ import {
   initializeTransaction,
   findActiveFlutterwaveSubscription,
   cancelFlutterwaveSubscription,
+  FLUTTERWAVE_TX_PREFIX,
 } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
 import { sellerSubscriptionCanceledEmail } from "@/lib/email-templates";
@@ -60,7 +61,7 @@ export async function subscribeToPlan(planSlug: string, cycle: Cycle): Promise<S
   // Instead we embed everything the webhook needs directly in our own tx_ref: storeId,
   // plan slug, and cycle. storeId (cuid) and slug (kebab-case) never contain "_", so
   // splitting on it is unambiguous. See handleNewSubscriptionCharge in the webhook route.
-  const txRef = `SUB_${store.id}_${plan.slug}_${cycle}_${Date.now()}`;
+  const txRef = `${FLUTTERWAVE_TX_PREFIX}SUB_${store.id}_${plan.slug}_${cycle}_${Date.now()}`;
 
   const result = await initializeTransaction({
     email: store.email,

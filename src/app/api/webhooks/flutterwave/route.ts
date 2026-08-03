@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyWebhookSignature, verifyTransaction } from "@/lib/flutterwave";
+import { verifyWebhookSignature, verifyTransaction, FLUTTERWAVE_TX_PREFIX } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
 import { customerOrderPaidEmail, sellerOrderPaidEmail, sellerSubscriptionActiveEmail } from "@/lib/email-templates";
 import { addCycle, cycleAmount, type Cycle } from "@/lib/billing-cycles";
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   // subscribeToPlan in src/lib/actions/billing.ts. Everything needed to activate it is
   // embedded in the ref itself, so this never depends on the webhook echoing back which
   // Flutterwave payment plan the charge belongs to (it doesn't, reliably).
-  if (txRef.startsWith("SUB_")) {
+  if (txRef.startsWith(`${FLUTTERWAVE_TX_PREFIX}SUB_`)) {
     await handleNewSubscriptionCharge(event.data, transactionId);
     return NextResponse.json({ received: true });
   }
@@ -140,7 +140,7 @@ async function logSubscriptionPaymentAndNotify(
   }
 }
 
-/** The first charge for a plan a seller just picked on /dashboard/billing — tx_ref is SUB_<storeId>_<planSlug>_<cycle>_<ts>. */
+/** The first charge for a plan a seller just picked on /dashboard/billing — tx_ref is SH-SUB_<storeId>_<planSlug>_<cycle>_<ts>. */
 async function handleNewSubscriptionCharge(data: Record<string, unknown>, transactionId: string) {
   const txRef = data.tx_ref as string;
 
@@ -150,6 +150,8 @@ async function handleNewSubscriptionCharge(data: Record<string, unknown>, transa
   const verified = await verifyTransaction(transactionId);
   if (!verified || verified.status !== "successful") return;
 
+  // Splitting on "_" skips index 0 (the "SH-SUB" prefix token) regardless of exactly what
+  // it contains, so this is unaffected by the "SH-" routing prefix.
   const [, storeId, planSlug, cycleRaw] = txRef.split("_");
   const cycle = cycleRaw as Cycle;
   const { id: customerId } = chargeCustomer(data);

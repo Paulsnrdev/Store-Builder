@@ -2,6 +2,12 @@ import crypto from "node:crypto";
 
 const FLUTTERWAVE_BASE_URL = "https://api.flutterwave.com/v3";
 
+// This Flutterwave account is shared across multiple projects, all sitting behind one
+// webhook router (github.com/Paulsnrdev/flutterwave-router) that forwards each event to
+// the right project by matching this prefix at the start of tx_ref. Every tx_ref StoreHike
+// sends to Flutterwave — orders and subscriptions alike — must start with this.
+export const FLUTTERWAVE_TX_PREFIX = "SH-";
+
 type InitializeTransactionInput = {
   email: string;
   name: string;

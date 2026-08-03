@@ -5,7 +5,7 @@ import { priceCartItems, type CartItemRequest } from "@/lib/order-pricing";
 import { reserveStock, restoreStock, InsufficientStockError } from "@/lib/inventory";
 import { validateDiscountCode } from "@/lib/discounts";
 import { randomOrderNumber } from "@/lib/order-number";
-import { initializeTransaction } from "@/lib/flutterwave";
+import { initializeTransaction, FLUTTERWAVE_TX_PREFIX } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
 import { customerOrderPendingEmail, sellerOrderPendingEmail } from "@/lib/email-templates";
 
@@ -132,7 +132,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         phone: input.customer.phone,
         amount: total,
         currency: store.currency,
-        txRef: order.orderNumber,
+        txRef: `${FLUTTERWAVE_TX_PREFIX}${order.orderNumber}`,
         redirectUrl: `${appUrl}/shop/${store.slug}/order/${order.orderNumber}`,
         subaccountId: store.flutterwaveSubaccountId,
         storeName: store.name,
@@ -153,7 +153,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         return { ok: false, error: result.error };
       }
 
-      await prisma.order.update({ where: { id: order.id }, data: { flutterwaveTxRef: order.orderNumber } });
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { flutterwaveTxRef: `${FLUTTERWAVE_TX_PREFIX}${order.orderNumber}` },
+      });
       return { ok: true, orderNumber: order.orderNumber, flutterwavePaymentLink: result.paymentLink };
     }
 
