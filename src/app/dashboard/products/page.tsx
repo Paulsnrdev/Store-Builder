@@ -5,6 +5,9 @@ import { getCurrentStore } from "@/lib/store";
 import { ProductsTable, type ProductRow } from "@/components/dashboard/products-table";
 import { getStockStatus } from "@/lib/inventory-status";
 import { FilterSelect } from "@/components/dashboard/filter-select";
+import { PageHeader } from "@/components/ui/page-header";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default async function ProductsPage({
   searchParams,
@@ -60,24 +63,15 @@ export default async function ProductsPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
-        <Link
-          href="/dashboard/products/new"
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-        >
-          New product
-        </Link>
-      </div>
+      <PageHeader
+        title="Products"
+        action={
+          <Button href="/dashboard/products/new">New product</Button>
+        }
+      />
 
       <form className="mt-4 flex flex-wrap items-center gap-3" method="get">
-        <input
-          type="text"
-          name="q"
-          defaultValue={q}
-          placeholder="Search name or SKU"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input type="text" name="q" defaultValue={q} placeholder="Search name or SKU" className="w-auto" />
         <FilterSelect name="category" defaultValue={category ?? ""}>
           <option value="">All categories</option>
           {categories.map((c) => (
@@ -96,9 +90,9 @@ export default async function ProductsPage({
           <option value="low">Low stock</option>
           <option value="out">Out of stock</option>
         </FilterSelect>
-        <button type="submit" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <Button type="submit" variant="secondary">
           Filter
-        </button>
+        </Button>
         {(q || category || status || stock) && (
           <Link href="/dashboard/products" className="text-sm text-gray-500 hover:underline">
             Clear

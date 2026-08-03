@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { whatsappLink } from "@/lib/whatsapp";
 import { orderStatusLabel, orderStatusClass } from "@/lib/order-status-display";
+import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
 
 const PAID_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
 
@@ -37,34 +40,34 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           href={whatsappLink(customer.phone, `Hi ${customer.name},`)}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white"
+          className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
         >
           Message on WhatsApp
         </Link>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-4">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <p className="text-xs font-medium uppercase text-gray-500">Orders</p>
           <p className="mt-1 text-xl font-semibold text-gray-900">{customer.orders.length}</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        </Card>
+        <Card>
           <p className="text-xs font-medium uppercase text-gray-500">Total spent</p>
           <p className="mt-1 text-xl font-semibold text-gray-900">₦{totalSpent.toLocaleString()}</p>
-        </div>
+        </Card>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <TableShell className="mt-4">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
+          <TableHead>
             <tr>
               <th className="px-4 py-3">Order</th>
               <th className="px-4 py-3">Total</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Date</th>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+          </TableHead>
+          <TableBody>
             {customer.orders.map((order) => (
               <tr key={order.id}>
                 <td className="px-4 py-3">
@@ -74,25 +77,17 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                 </td>
                 <td className="px-4 py-3 text-gray-700">₦{Number(order.total).toLocaleString()}</td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${orderStatusClass[order.status]}`}>
-                    {orderStatusLabel[order.status]}
-                  </span>
+                  <StatusBadge tone={orderStatusClass[order.status]}>{orderStatusLabel[order.status]}</StatusBadge>
                 </td>
                 <td className="px-4 py-3 text-gray-500">
                   {order.createdAt.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                 </td>
               </tr>
             ))}
-            {customer.orders.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
-                  No orders yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
+            {customer.orders.length === 0 && <TableEmpty colSpan={4}>No orders yet.</TableEmpty>}
+          </TableBody>
         </table>
-      </div>
+      </TableShell>
     </div>
   );
 }

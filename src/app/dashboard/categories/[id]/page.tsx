@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { CategoryForm } from "@/components/dashboard/category-form";
 import { updateCategory } from "@/lib/actions/categories";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,7 +13,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Edit category</h1>
+      <PageHeader title="Edit category" />
       <div className="mt-6">
         <CategoryForm
           action={updateCategory.bind(null, category.id)}

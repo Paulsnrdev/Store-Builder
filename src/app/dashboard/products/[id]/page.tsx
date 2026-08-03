@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { ProductForm, type ProductInitial } from "@/components/dashboard/product-form";
 import { updateProduct } from "@/lib/actions/products";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -41,7 +42,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Edit product</h1>
+      <PageHeader title="Edit product" />
       <div className="mt-6">
         <ProductForm action={updateProduct.bind(null, product.id)} categories={categories} initial={initial} />
       </div>

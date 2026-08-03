@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { ShippingZoneForm } from "@/components/dashboard/shipping-zone-form";
 import { updateShippingZone } from "@/lib/actions/shipping-zones";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function EditShippingZonePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,7 +13,7 @@ export default async function EditShippingZonePage({ params }: { params: Promise
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Edit shipping zone</h1>
+      <PageHeader title="Edit shipping zone" />
       <div className="mt-6">
         <ShippingZoneForm
           action={updateShippingZone.bind(null, zone.id)}

@@ -2,6 +2,10 @@ import Link from "next/link";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
+import { PageHeader } from "@/components/ui/page-header";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
 
 const PAID_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
 
@@ -33,19 +37,13 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Customers</h1>
+      <PageHeader title="Customers" />
 
       <form className="mt-4 flex flex-wrap items-center gap-3" method="get">
-        <input
-          type="text"
-          name="q"
-          defaultValue={q}
-          placeholder="Search name or phone"
-          className="w-72 rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-        <button type="submit" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <Input type="text" name="q" defaultValue={q} placeholder="Search name or phone" className="w-72" />
+        <Button type="submit" variant="secondary">
           Search
-        </button>
+        </Button>
         {q && (
           <Link href="/dashboard/customers" className="text-sm text-gray-500 hover:underline">
             Clear
@@ -53,16 +51,16 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         )}
       </form>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <TableShell className="mt-4">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
+          <TableHead>
             <tr>
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Orders</th>
               <th className="px-4 py-3">Total spent</th>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+          </TableHead>
+          <TableBody>
             {rows.map((c) => (
               <tr key={c.id}>
                 <td className="px-4 py-3">
@@ -75,16 +73,10 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
                 <td className="px-4 py-3 text-gray-700">₦{c.totalSpent.toLocaleString()}</td>
               </tr>
             ))}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
-                  No customers found.
-                </td>
-              </tr>
-            )}
-          </tbody>
+            {rows.length === 0 && <TableEmpty colSpan={3}>No customers found.</TableEmpty>}
+          </TableBody>
         </table>
-      </div>
+      </TableShell>
     </div>
   );
 }

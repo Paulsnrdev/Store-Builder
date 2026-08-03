@@ -1,5 +1,6 @@
 import { getCurrentStore } from "@/lib/store";
 import { SettingsForm } from "@/components/dashboard/settings-form";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function SettingsPage() {
   const store = await getCurrentStore();
@@ -14,7 +15,7 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
+      <PageHeader title="Settings" />
       <div className="mt-6">
         <SettingsForm
           initial={{

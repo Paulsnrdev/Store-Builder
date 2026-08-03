@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { deleteCategory } from "@/lib/actions/categories";
 import { DeleteButton } from "@/components/dashboard/delete-button";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
 
 export default async function CategoriesPage() {
   const store = await getCurrentStore();
@@ -15,19 +18,11 @@ export default async function CategoriesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
-        <Link
-          href="/dashboard/categories/new"
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-        >
-          New category
-        </Link>
-      </div>
+      <PageHeader title="Categories" action={<Button href="/dashboard/categories/new">New category</Button>} />
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <TableShell className="mt-6">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
+          <TableHead>
             <tr>
               <th className="px-4 py-3">Image</th>
               <th className="px-4 py-3">Name</th>
@@ -35,8 +30,8 @@ export default async function CategoriesPage() {
               <th className="px-4 py-3">Sort order</th>
               <th className="px-4 py-3" />
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+          </TableHead>
+          <TableBody>
             {categories.map((category) => (
               <tr key={category.id}>
                 <td className="px-4 py-3">
@@ -61,16 +56,10 @@ export default async function CategoriesPage() {
                 </td>
               </tr>
             ))}
-            {categories.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                  No categories yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
+            {categories.length === 0 && <TableEmpty colSpan={5}>No categories yet.</TableEmpty>}
+          </TableBody>
         </table>
-      </div>
+      </TableShell>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { getCurrentStore } from "@/lib/store";
 import { getStockStatus } from "@/lib/inventory-status";
 import { orderStatusLabel, orderStatusClass } from "@/lib/order-status-display";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
+import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -72,29 +74,29 @@ export default async function DashboardHomePage() {
       <p className="mt-1 text-sm text-gray-500">{store.name}</p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <p className="text-xs font-medium uppercase text-gray-500">Today&apos;s orders</p>
           <p className="mt-1 text-2xl font-semibold text-gray-900">{todayOrdersCount}</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        </Card>
+        <Card>
           <p className="text-xs font-medium uppercase text-gray-500">Revenue this month</p>
           <p className="mt-1 text-2xl font-semibold text-gray-900">₦{revenueThisMonth.toLocaleString()}</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        </Card>
+        <Card>
           <p className="text-xs font-medium uppercase text-gray-500">Pending orders</p>
           <p className="mt-1 text-2xl font-semibold text-gray-900">{pendingOrders.length}</p>
-        </div>
+        </Card>
       </div>
 
-      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+      <Card className="mt-4">
         <h2 className="text-sm font-semibold text-gray-900">Revenue — last 30 days</h2>
         <div className="mt-4">
           <RevenueChart data={chartData} />
         </div>
-      </div>
+      </Card>
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-900">Orders needing action</h2>
             <Link href="/dashboard/orders" className="text-xs text-gray-500 hover:underline">
@@ -106,22 +108,20 @@ export default async function DashboardHomePage() {
               <Link
                 key={order.id}
                 href={`/dashboard/orders/${order.id}`}
-                className="flex items-center justify-between py-2 text-sm hover:bg-gray-50"
+                className="flex items-center justify-between py-2 text-sm transition-colors hover:bg-gray-50"
               >
                 <div>
                   <span className="font-medium text-gray-900">{order.orderNumber}</span>
                   <span className="ml-2 text-gray-500">{order.customer.name}</span>
                 </div>
-                <span className={`rounded-full px-2 py-1 text-xs font-medium ${orderStatusClass[order.status]}`}>
-                  {orderStatusLabel[order.status]}
-                </span>
+                <StatusBadge tone={orderStatusClass[order.status]}>{orderStatusLabel[order.status]}</StatusBadge>
               </Link>
             ))}
             {pendingOrders.length === 0 && <p className="py-4 text-center text-sm text-gray-400">Nothing needs action.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-900">Low stock alerts</h2>
             <Link href="/dashboard/products" className="text-xs text-gray-500 hover:underline">
@@ -130,14 +130,18 @@ export default async function DashboardHomePage() {
           </div>
           <div className="mt-3 divide-y divide-gray-100">
             {lowStockProducts.slice(0, 8).map((p) => (
-              <Link key={p.id} href={`/dashboard/products/${p.id}`} className="flex items-center justify-between py-2 text-sm hover:bg-gray-50">
+              <Link
+                key={p.id}
+                href={`/dashboard/products/${p.id}`}
+                className="flex items-center justify-between py-2 text-sm transition-colors hover:bg-gray-50"
+              >
                 <span className="text-gray-900">{p.name}</span>
                 <span className={p.status === "out-of-stock" ? "text-red-600" : "text-amber-600"}>{p.stock} left</span>
               </Link>
             ))}
             {lowStockProducts.length === 0 && <p className="py-4 text-center text-sm text-gray-400">Stock levels look healthy.</p>}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { orderStatusLabel, orderStatusClass, paymentMethodLabel } from "@/lib/order-status-display";
 import { FilterSelect } from "@/components/dashboard/filter-select";
+import { PageHeader } from "@/components/ui/page-header";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 const STATUSES = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
 const PAYMENT_METHODS = ["FLUTTERWAVE", "BANK_TRANSFER", "CASH_ON_DELIVERY"];
@@ -39,16 +44,10 @@ export default async function OrdersPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
+      <PageHeader title="Orders" />
 
       <form className="mt-4 flex flex-wrap items-center gap-3" method="get">
-        <input
-          type="text"
-          name="q"
-          defaultValue={q}
-          placeholder="Search order #, customer name or phone"
-          className="w-72 rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <Input type="text" name="q" defaultValue={q} placeholder="Search order #, customer name or phone" className="w-72" />
         <FilterSelect name="status" defaultValue={status ?? ""}>
           <option value="">All statuses</option>
           {STATUSES.map((s) => (
@@ -65,9 +64,9 @@ export default async function OrdersPage({
             </option>
           ))}
         </FilterSelect>
-        <button type="submit" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <Button type="submit" variant="secondary">
           Filter
-        </button>
+        </Button>
         {(q || status || payment) && (
           <Link href="/dashboard/orders" className="text-sm text-gray-500 hover:underline">
             Clear
@@ -75,9 +74,9 @@ export default async function OrdersPage({
         )}
       </form>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <TableShell className="mt-4">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
+          <TableHead>
             <tr>
               <th className="px-4 py-3">Order</th>
               <th className="px-4 py-3">Customer</th>
@@ -87,8 +86,8 @@ export default async function OrdersPage({
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3" />
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+          </TableHead>
+          <TableBody>
             {orders.map((order) => (
               <tr key={order.id}>
                 <td className="px-4 py-3">
@@ -102,9 +101,7 @@ export default async function OrdersPage({
                 </td>
                 <td className="px-4 py-3 text-gray-700">₦{Number(order.total).toLocaleString()}</td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${orderStatusClass[order.status]}`}>
-                    {orderStatusLabel[order.status]}
-                  </span>
+                  <StatusBadge tone={orderStatusClass[order.status]}>{orderStatusLabel[order.status]}</StatusBadge>
                 </td>
                 <td className="px-4 py-3 text-gray-500">{paymentMethodLabel[order.paymentMethod]}</td>
                 <td className="px-4 py-3 text-gray-500">{order.createdAt.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</td>
@@ -115,16 +112,10 @@ export default async function OrdersPage({
                 </td>
               </tr>
             ))}
-            {orders.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  No orders found.
-                </td>
-              </tr>
-            )}
-          </tbody>
+            {orders.length === 0 && <TableEmpty colSpan={7}>No orders found.</TableEmpty>}
+          </TableBody>
         </table>
-      </div>
+      </TableShell>
     </div>
   );
 }

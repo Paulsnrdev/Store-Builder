@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { importProductsCsv, type ImportResult } from "@/lib/actions/products-import";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function ImportExportPage() {
   const [result, formAction, pending] = useActionState<ImportResult | null, FormData>(importProductsCsv, null);
@@ -14,18 +16,15 @@ export default function ImportExportPage() {
       </Link>
       <h1 className="mt-2 text-2xl font-semibold text-gray-900">Import / Export</h1>
 
-      <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+      <Card className="mt-6 p-6">
         <h2 className="font-medium text-gray-900">Export</h2>
         <p className="mt-1 text-sm text-gray-500">Download all your products as a CSV file.</p>
-        <a
-          href="/api/dashboard/products/export"
-          className="mt-3 inline-block rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
+        <Button href="/api/dashboard/products/export" variant="secondary" className="mt-3">
           Download CSV
-        </a>
-      </div>
+        </Button>
+      </Card>
 
-      <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+      <Card className="mt-6 p-6">
         <h2 className="font-medium text-gray-900">Import</h2>
         <p className="mt-1 text-sm text-gray-500">
           Upload a CSV with columns: name, slug, description, category, price, compareAtPrice, costPrice, sku,
@@ -34,13 +33,9 @@ export default function ImportExportPage() {
         </p>
         <form action={formAction} className="mt-3 space-y-3">
           <input type="file" name="file" accept=".csv" required className="text-sm" />
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={pending}>
             {pending ? "Importing..." : "Import"}
-          </button>
+          </Button>
         </form>
 
         {result && (
@@ -57,7 +52,7 @@ export default function ImportExportPage() {
             )}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

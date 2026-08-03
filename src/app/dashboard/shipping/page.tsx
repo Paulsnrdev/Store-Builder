@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { deleteShippingZone } from "@/lib/actions/shipping-zones";
 import { DeleteButton } from "@/components/dashboard/delete-button";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
 
 export default async function ShippingPage() {
   const store = await getCurrentStore();
@@ -10,22 +13,15 @@ export default async function ShippingPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Shipping zones</h1>
-        <Link
-          href="/dashboard/shipping/new"
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-        >
-          New zone
-        </Link>
-      </div>
-      <p className="mt-1 text-sm text-gray-500">
-        Shipping cost at checkout is picked by matching the buyer&apos;s state to a zone. A state not covered by any zone ships free.
-      </p>
+      <PageHeader
+        title="Shipping zones"
+        description="Shipping cost at checkout is picked by matching the buyer's state to a zone. A state not covered by any zone ships free."
+        action={<Button href="/dashboard/shipping/new">New zone</Button>}
+      />
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <TableShell className="mt-6">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
+          <TableHead>
             <tr>
               <th className="px-4 py-3">Zone</th>
               <th className="px-4 py-3">States</th>
@@ -33,8 +29,8 @@ export default async function ShippingPage() {
               <th className="px-4 py-3">Free above</th>
               <th className="px-4 py-3" />
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+          </TableHead>
+          <TableBody>
             {zones.map((zone) => (
               <tr key={zone.id}>
                 <td className="px-4 py-3 font-medium text-gray-900">{zone.name}</td>
@@ -53,16 +49,10 @@ export default async function ShippingPage() {
                 </td>
               </tr>
             ))}
-            {zones.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                  No shipping zones yet — every state currently ships free.
-                </td>
-              </tr>
-            )}
-          </tbody>
+            {zones.length === 0 && <TableEmpty colSpan={5}>No shipping zones yet — every state currently ships free.</TableEmpty>}
+          </TableBody>
         </table>
-      </div>
+      </TableShell>
     </div>
   );
 }

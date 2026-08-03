@@ -6,6 +6,9 @@ import { whatsappLink } from "@/lib/whatsapp";
 import { orderStatusLabel, orderStatusClass, paymentMethodLabel } from "@/lib/order-status-display";
 import { OrderActions } from "@/components/dashboard/order-actions";
 import { OrderTimeline } from "@/components/dashboard/order-timeline";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const store = await getCurrentStore();
@@ -29,21 +32,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <h1 className="mt-1 text-2xl font-semibold text-gray-900">{order.orderNumber}</h1>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`rounded-full px-3 py-1 text-sm font-medium ${orderStatusClass[order.status]}`}>
-            {orderStatusLabel[order.status]}
-          </span>
-          <Link
-            href={`/dashboard/orders/${order.id}/print`}
-            target="_blank"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <StatusBadge tone={`${orderStatusClass[order.status]} px-3 py-1 text-sm`}>{orderStatusLabel[order.status]}</StatusBadge>
+          <Button href={`/dashboard/orders/${order.id}/print`} target="_blank" variant="secondary" size="sm">
             Print invoice
-          </Link>
+          </Button>
         </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <h2 className="text-sm font-semibold text-gray-900">Customer</h2>
           <p className="mt-2 text-sm text-gray-700">{order.customer.name}</p>
           <p className="text-sm text-gray-500">{order.customer.phone}</p>
@@ -56,9 +53,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           >
             Message on WhatsApp
           </Link>
-        </div>
+        </Card>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <h2 className="text-sm font-semibold text-gray-900">Shipping address</h2>
           <p className="mt-2 text-sm text-gray-700">{shippingAddress.address}</p>
           <p className="text-sm text-gray-500">{shippingAddress.state} State</p>
@@ -68,9 +65,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <p className="mt-1 text-sm text-gray-500">{order.customerNote}</p>
             </>
           )}
-        </div>
+        </Card>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <h2 className="text-sm font-semibold text-gray-900">Payment</h2>
           <p className="mt-2 text-sm text-gray-700">{paymentMethodLabel[order.paymentMethod]}</p>
           {order.flutterwaveTxRef && <p className="text-xs text-gray-400">Ref: {order.flutterwaveTxRef}</p>}
@@ -80,9 +77,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <p className="mt-1 text-sm text-gray-500">{order.trackingNote}</p>
             </>
           )}
-        </div>
+        </Card>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card>
           <h2 className="text-sm font-semibold text-gray-900">Status timeline</h2>
           <div className="mt-3">
             <OrderTimeline
@@ -94,14 +91,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               updatedAt={order.updatedAt}
             />
           </div>
-        </div>
+        </Card>
       </div>
 
       <div className="mt-4">
         <OrderActions orderId={order.id} status={order.status} paymentMethod={order.paymentMethod} />
       </div>
 
-      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+      <Card className="mt-4">
         <h2 className="text-sm font-semibold text-gray-900">Items</h2>
         <div className="mt-2 divide-y divide-gray-100">
           {order.items.map((item) => (
@@ -134,7 +131,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <span>₦{Number(order.total).toLocaleString()}</span>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
