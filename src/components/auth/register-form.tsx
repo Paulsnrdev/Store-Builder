@@ -46,11 +46,23 @@ export function RegisterForm() {
       <form action={formAction} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Your name</label>
-          <input name="name" type="text" required className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <input
+            name="name"
+            type="text"
+            required
+            placeholder="e.g. Segun Ajayi"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input name="email" type="email" required className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="you@email.com"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Password</label>
@@ -59,6 +71,7 @@ export function RegisterForm() {
             type="password"
             required
             minLength={8}
+            placeholder="At least 8 characters"
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           />
         </div>
