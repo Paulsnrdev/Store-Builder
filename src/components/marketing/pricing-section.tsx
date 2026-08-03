@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 type Cycle = "monthly" | "biannual" | "annual";
 
@@ -103,7 +103,7 @@ export function PricingSection() {
               type="button"
               onClick={() => setCycle(c)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                cycle === c ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"
+                cycle === c ? "bg-brand-600 text-white" : "text-gray-600 hover:text-gray-900"
               }`}
             >
               {CYCLE_LABEL[c]}
@@ -121,12 +121,12 @@ export function PricingSection() {
             return (
               <div
                 key={plan.name}
-                className={`relative flex flex-col rounded-xl border bg-white p-5 ${
-                  plan.popular ? "border-gray-900 shadow-md" : "border-gray-200"
+                className={`relative flex flex-col rounded-xl border bg-white p-5 transition-shadow duration-200 hover:shadow-card-hover ${
+                  plan.popular ? "border-brand-600 shadow-card-hover" : "border-gray-200 shadow-card"
                 }`}
               >
                 {plan.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gray-900 px-3 py-0.5 text-xs font-medium text-white">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-600 px-3 py-0.5 text-xs font-medium text-white">
                     Most popular
                   </span>
                 )}
@@ -153,17 +153,14 @@ export function PricingSection() {
 
                 <p className="mt-3 text-sm font-medium text-gray-700">{plan.productLimit}</p>
 
-                <Link
-                  href="/register"
-                  className="mt-4 block rounded-md bg-gray-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-gray-800"
-                >
+                <Button href="/register" className="mt-4 w-full">
                   Get started
-                </Link>
+                </Button>
 
                 <ul className="mt-5 space-y-2 border-t border-gray-100 pt-4 text-sm text-gray-600">
                   {plan.features.map((f) => (
                     <li key={f} className="flex gap-2">
-                      <span className="text-green-600">✓</span>
+                      <span className="text-brand-600">✓</span>
                       <span>{f}</span>
                     </li>
                   ))}
