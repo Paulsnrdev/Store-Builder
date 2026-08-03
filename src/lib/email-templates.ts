@@ -104,3 +104,90 @@ export function sellerSubscriptionCanceledEmail(data: SubscriptionEmailData & { 
     `,
   };
 }
+
+/** A renewal charge was declined — subscription just dropped to PAST_DUE (Free-tier limits apply immediately, no grace period). */
+export function sellerSubscriptionPastDueEmail(data: SubscriptionEmailData) {
+  return {
+    subject: `Payment failed for your ${data.planName} plan — StoreHike`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2>We couldn't renew your ${data.planName} plan</h2>
+        <p>The card on file for ${data.storeName} was declined. Your account has reverted to the Free plan's limits until this is resolved — update your payment details and resubscribe from your dashboard's Billing page.</p>
+      </div>
+    `,
+  };
+}
+
+/** New seller (or new store on an existing account) just registered. */
+export function welcomeSellerEmail(data: { storeName: string; name: string }) {
+  return {
+    subject: `Welcome to StoreHike, ${data.name}!`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2>Welcome to StoreHike, ${data.name}!</h2>
+        <p>${data.storeName} is set up and ready. Log in to your dashboard to add products, customize your storefront, and start taking orders.</p>
+      </div>
+    `,
+  };
+}
+
+export function passwordResetEmail(data: { resetUrl: string }) {
+  return {
+    subject: `Reset your StoreHike password`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2>Reset your password</h2>
+        <p>Click the link below to choose a new password. This link expires in 1 hour and can only be used once.</p>
+        <p><a href="${data.resetUrl}" style="color:#059669">Reset your password</a></p>
+        <p style="color:#6b7280;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
+      </div>
+    `,
+  };
+}
+
+type OrderStatusEmailData = OrderEmailData & { trackingNote?: string | null };
+
+export function customerOrderShippedEmail(data: OrderStatusEmailData) {
+  return {
+    subject: `Your order ${data.orderNumber} has shipped — ${data.storeName}`,
+    html: wrap(
+      `Your order is on its way, ${data.customerName}!`,
+      `Order <strong>${data.orderNumber}</strong> from ${data.storeName} has been shipped.`,
+      data,
+      data.trackingNote ? `<p>${data.trackingNote}</p>` : ""
+    ),
+  };
+}
+
+export function customerOrderDeliveredEmail(data: OrderEmailData) {
+  return {
+    subject: `Your order ${data.orderNumber} was delivered — ${data.storeName}`,
+    html: wrap(
+      `Order delivered, ${data.customerName}!`,
+      `Order <strong>${data.orderNumber}</strong> from ${data.storeName} has been marked as delivered. Enjoy!`,
+      data
+    ),
+  };
+}
+
+export function customerOrderCancelledEmail(data: OrderEmailData) {
+  return {
+    subject: `Your order ${data.orderNumber} was cancelled — ${data.storeName}`,
+    html: wrap(
+      `Order cancelled`,
+      `Order <strong>${data.orderNumber}</strong> from ${data.storeName} has been cancelled.`,
+      data
+    ),
+  };
+}
+
+export function customerOrderRefundedEmail(data: OrderEmailData) {
+  return {
+    subject: `Your order ${data.orderNumber} was refunded — ${data.storeName}`,
+    html: wrap(
+      `Order refunded`,
+      `Order <strong>${data.orderNumber}</strong> from ${data.storeName} has been refunded.`,
+      data
+    ),
+  };
+}

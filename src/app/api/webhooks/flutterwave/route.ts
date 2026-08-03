@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature, verifyTransaction, FLUTTERWAVE_TX_PREFIX } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
-import { customerOrderPaidEmail, sellerOrderPaidEmail, sellerSubscriptionActiveEmail } from "@/lib/email-templates";
+import {
+  customerOrderPaidEmail,
+  sellerOrderPaidEmail,
+  sellerSubscriptionActiveEmail,
+  sellerSubscriptionPastDueEmail,
+} from "@/lib/email-templates";
 import { addCycle, cycleAmount, type Cycle } from "@/lib/billing-cycles";
 
 export async function POST(req: Request) {
@@ -248,10 +253,18 @@ async function handleFailedSubscriptionCharge(data: Record<string, unknown>, tra
       status: "ACTIVE",
       OR: [...(customerId ? [{ flutterwaveCustomerId: customerId }] : []), ...(customerEmail ? [{ store: { email: customerEmail } }] : [])],
     },
+    include: { plan: true, store: true },
   });
   if (!existing) return;
 
   await prisma.subscription.update({ where: { id: existing.id }, data: { status: "PAST_DUE" } });
+
+  if (existing.store.email) {
+    await sendEmail({
+      to: existing.store.email,
+      ...sellerSubscriptionPastDueEmail({ storeName: existing.store.name, planName: existing.plan.name }),
+    });
+  }
 }
 
 /** Flutterwave's subscription.cancelled event — identifies the plan by data.plan.id and the customer by email. */

@@ -1,6 +1,8 @@
 import { getCurrentStore } from "@/lib/store";
 import { SettingsForm } from "@/components/dashboard/settings-form";
+import { ChangePasswordForm } from "@/components/dashboard/change-password-form";
 import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
 
 export default async function SettingsPage() {
   const store = await getCurrentStore();
@@ -43,6 +45,14 @@ export default async function SettingsPage() {
             slug: store.slug,
           }}
         />
+      </div>
+
+      <div className="mt-10 max-w-lg">
+        <h2 className="text-lg font-semibold text-gray-900">Password</h2>
+        <p className="mt-1 text-sm text-gray-500">Only applies if you sign in with email and password.</p>
+        <Card className="mt-3">
+          <ChangePasswordForm />
+        </Card>
       </div>
     </div>
   );
