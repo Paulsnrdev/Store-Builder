@@ -65,13 +65,7 @@ export default function MarketingHomePage() {
             href="/register"
             className="rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800"
           >
-            Create your store — it&apos;s free
-          </Link>
-          <Link
-            href="/shop/chunkz"
-            className="rounded-md border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            See a live example
+            Create your store
           </Link>
         </div>
       </section>
