@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PricingSection } from "@/components/marketing/pricing-section";
+import { MarketingFooter } from "@/components/marketing/footer";
 
 const FEATURES = [
   {
@@ -58,7 +59,7 @@ export default function MarketingHomePage() {
         </h1>
         <p className="mt-4 text-lg text-gray-600">
           Stop taking orders one DM at a time. StoreHike gives Nigerian sellers a hosted storefront, cart,
-          checkout, and order dashboard — set up in minutes.
+          checkout, and order dashboard set up in minutes.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
           <Link
@@ -70,7 +71,7 @@ export default function MarketingHomePage() {
         </div>
       </section>
 
-      <section className="border-t border-gray-100 bg-gray-50 px-4 py-16">
+      <section id="features" className="border-t border-gray-100 bg-gray-50 px-4 py-16">
         <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <div key={f.title} className="rounded-lg border border-gray-200 bg-white p-5">
@@ -100,9 +101,7 @@ export default function MarketingHomePage() {
 
       <PricingSection />
 
-      <footer className="border-t border-gray-100 px-4 py-8 text-center text-xs text-gray-400">
-        StoreHike — hosted storefronts for Instagram &amp; WhatsApp sellers.
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

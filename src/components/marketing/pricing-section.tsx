@@ -30,7 +30,7 @@ const PLANS: Plan[] = [
     name: "Free",
     tagline: "Try StoreHike at no cost.",
     monthlyPrice: null,
-    productLimit: "Up to 10 images",
+    productLimit: "Up to 10 products",
     features: [
       "One online store",
       "Manage orders & customers",
@@ -43,7 +43,7 @@ const PLANS: Plan[] = [
     name: "Lite",
     tagline: "For sellers ready to leave DMs behind.",
     monthlyPrice: 3900,
-    productLimit: "Up to 20 images",
+    productLimit: "Up to 20 products",
     features: [
       "Everything in Free",
       "Card payments via Flutterwave",
@@ -91,7 +91,7 @@ export function PricingSection() {
   const [cycle, setCycle] = useState<Cycle>("monthly");
 
   return (
-    <section className="border-t border-gray-100 bg-gray-50 px-4 py-16">
+    <section id="pricing" className="border-t border-gray-100 bg-gray-50 px-4 py-16">
       <div className="mx-auto max-w-6xl">
         <h2 className="text-center text-2xl font-semibold text-gray-900">Simple, honest pricing</h2>
         <p className="mt-2 text-center text-sm text-gray-600">Start free. Upgrade as your catalogue grows.</p>
