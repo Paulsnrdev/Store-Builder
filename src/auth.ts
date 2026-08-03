@@ -14,6 +14,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Google verifies email ownership before allowing sign-in, so it's safe to trust
+      // that email and link straight to any existing account with the same address —
+      // otherwise a seller who registered with a password first (or has a second Google
+      // account sharing an email) gets a hard "OAuthAccountNotLinked" error with no way
+      // to self-recover, since there's no account-merge UI.
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       credentials: { email: {}, password: {} },
