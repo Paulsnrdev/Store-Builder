@@ -7,6 +7,9 @@ ADD COLUMN     "flutterwaveMonthlyPlanId" TEXT,
 ADD COLUMN     "flutterwaveBiannualPlanId" TEXT,
 ADD COLUMN     "flutterwaveAnnualPlanId" TEXT;
 
+-- AlterTable
+ALTER TABLE "Subscription" ADD COLUMN     "flutterwaveCustomerId" TEXT;
+
 -- CreateTable
 CREATE TABLE "SubscriptionPayment" (
     "id" TEXT NOT NULL,
