@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 export function TableShell({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn("overflow-hidden rounded-lg border border-gray-200 bg-white", className)} {...rest}>
-      {children}
+      <div className="overflow-x-auto">{children}</div>
     </div>
   );
 }

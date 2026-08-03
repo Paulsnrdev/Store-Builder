@@ -5,11 +5,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const store = await getCurrentStore();
 
   return (
-    <div className="flex min-h-screen bg-gray-50 print:block print:bg-white">
-      <aside className="w-60 shrink-0 border-r border-gray-200 bg-white print:hidden">
-        <Sidebar storeName={store.name} />
-      </aside>
-      <main className="flex-1 overflow-x-hidden p-6 print:p-0">{children}</main>
+    <div className="min-h-screen bg-gray-50 sm:flex print:block print:bg-white">
+      <Sidebar storeName={store.name} />
+      <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 print:p-0">{children}</main>
     </div>
   );
 }
