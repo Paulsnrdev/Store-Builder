@@ -12,8 +12,8 @@ export type ProductCardData = {
 
 export function ProductCard({ storeSlug, product }: { storeSlug: string; product: ProductCardData }) {
   return (
-    <Link href={`/shop/${storeSlug}/product/${product.slug}`} className="group block">
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+    <Link href={`/shop/${storeSlug}/product/${product.slug}`} className="group block transition-transform duration-200 hover:-translate-y-0.5">
+      <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 shadow-card transition-shadow duration-200 group-hover:shadow-card-hover">
         {product.imageUrl ? (
           <Image
             src={product.imageUrl}

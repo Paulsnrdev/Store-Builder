@@ -21,7 +21,7 @@ export function CartSyncControl() {
         <span>
           {syncing ? "Syncing..." : `Synced to ${linkedPhone}`} — use this number on another device to pick up this cart.
         </span>
-        <button type="button" onClick={unlinkPhone} className="font-medium text-gray-700 underline">
+        <button type="button" onClick={unlinkPhone} className="font-medium text-gray-700 underline transition-colors hover:text-gray-900">
           Unlink
         </button>
       </div>
@@ -37,12 +37,12 @@ export function CartSyncControl() {
           placeholder="+234..."
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm transition-colors focus:border-(--store-primary,#111827) focus:outline-none focus:ring-2 focus:ring-(--store-primary,#111827)/20"
         />
         <button
           type="submit"
           disabled={syncing || !phone.trim()}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-50"
+          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
         >
           {syncing ? "..." : "Sync"}
         </button>

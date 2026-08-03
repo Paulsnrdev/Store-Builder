@@ -97,7 +97,7 @@ export function ProductOptions({
                 key={value}
                 type="button"
                 onClick={() => setSelected((prev) => ({ ...prev, [group.key]: value }))}
-                className={`rounded-md border px-3 py-1.5 text-sm ${
+                className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
                   selected[group.key] === value
                     ? "border-gray-900 bg-gray-900 text-white"
                     : "border-gray-300 text-gray-700 hover:border-gray-400"
@@ -116,7 +116,7 @@ export function ProductOptions({
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="px-3 py-1.5 text-gray-500"
+            className="px-3 py-1.5 text-gray-500 transition-colors hover:bg-gray-50"
           >
             −
           </button>
@@ -124,7 +124,7 @@ export function ProductOptions({
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.min(maxQuantity || 1, q + 1))}
-            className="px-3 py-1.5 text-gray-500"
+            className="px-3 py-1.5 text-gray-500 transition-colors hover:bg-gray-50"
           >
             +
           </button>
@@ -135,7 +135,7 @@ export function ProductOptions({
         type="button"
         onClick={handleAddToCart}
         disabled={!canAddToCart}
-        className="mt-4 w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-sm font-medium text-white disabled:opacity-40"
+        className="mt-4 w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-40"
       >
         {!hasVariants && maxQuantity <= 0
           ? "Out of stock"
@@ -152,7 +152,7 @@ export function ProductOptions({
         <button
           type="button"
           onClick={() => router.push(`/shop/${storeSlug}/cart`)}
-          className="mt-2 w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700"
+          className="mt-2 w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
         >
           View cart
         </button>

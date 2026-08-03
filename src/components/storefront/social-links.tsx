@@ -19,7 +19,7 @@ export function SocialLinks({ links }: { links: SocialLinksType }) {
           href={links[key]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-medium text-gray-500 hover:text-gray-700"
+          className="text-xs font-medium text-gray-500 transition-colors hover:text-gray-700"
         >
           {PLATFORM_LABEL[key]}
         </a>

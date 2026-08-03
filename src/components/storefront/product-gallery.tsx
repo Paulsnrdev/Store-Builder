@@ -23,7 +23,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
       <div
         ref={scrollerRef}
         onScroll={onScroll}
-        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto rounded-lg bg-gray-100"
+        className="flex aspect-square w-full snap-x snap-mandatory scroll-smooth overflow-x-auto rounded-lg bg-gray-100"
       >
         {images.map((src, i) => (
           <div key={src + i} className="relative h-full w-full shrink-0 snap-center">
@@ -41,7 +41,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
       {images.length > 1 && (
         <div className="mt-2 flex justify-center gap-1.5">
           {images.map((_, i) => (
-            <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === active ? "bg-gray-900" : "bg-gray-300"}`} />
+            <span key={i} className={`h-1.5 w-1.5 rounded-full transition-colors duration-200 ${i === active ? "bg-gray-900" : "bg-gray-300"}`} />
           ))}
         </div>
       )}

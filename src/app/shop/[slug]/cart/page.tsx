@@ -49,7 +49,7 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
                 <button
                   type="button"
                   onClick={() => updateQuantity(key, item.quantity - 1)}
-                  className="px-2.5 py-1 text-gray-500"
+                  className="px-2.5 py-1 text-gray-500 transition-colors hover:bg-gray-50"
                 >
                   −
                 </button>
@@ -58,12 +58,12 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
                   type="button"
                   onClick={() => updateQuantity(key, item.quantity + 1)}
                   disabled={item.quantity >= item.maxQuantity}
-                  className="px-2.5 py-1 text-gray-500 disabled:opacity-30"
+                  className="px-2.5 py-1 text-gray-500 transition-colors hover:bg-gray-50 disabled:opacity-30"
                 >
                   +
                 </button>
               </div>
-              <button type="button" onClick={() => removeItem(key)} className="text-xs text-red-600">
+              <button type="button" onClick={() => removeItem(key)} className="text-xs text-red-600 transition-colors hover:text-red-700">
                 Remove
               </button>
             </div>
@@ -78,7 +78,7 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
 
       <Link
         href={`/shop/${slug}/checkout`}
-        className="mt-4 block w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-center text-sm font-medium text-white"
+        className="mt-4 block w-full rounded-md bg-(--store-primary,#111827) px-4 py-3 text-center text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
       >
         Checkout
       </Link>
