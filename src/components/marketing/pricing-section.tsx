@@ -30,7 +30,7 @@ const PLANS: Plan[] = [
     name: "Free",
     tagline: "Try StoreHike at no cost.",
     monthlyPrice: null,
-    productLimit: "Up to 3 products",
+    productLimit: "Up to 10 images",
     features: [
       "One online store",
       "Manage orders & customers",
@@ -43,7 +43,7 @@ const PLANS: Plan[] = [
     name: "Lite",
     tagline: "For sellers ready to leave DMs behind.",
     monthlyPrice: 3900,
-    productLimit: "Up to 10 products",
+    productLimit: "Up to 20 images",
     features: [
       "Everything in Free",
       "Card payments via Flutterwave",
@@ -155,9 +155,7 @@ export function PricingSection() {
 
                 <Link
                   href="/register"
-                  className={`mt-4 block rounded-md px-4 py-2 text-center text-sm font-medium transition-colors ${
-                    plan.popular ? "bg-gray-900 text-white hover:bg-gray-800" : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className="mt-4 block rounded-md bg-gray-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-gray-800"
                 >
                   Get started
                 </Link>
