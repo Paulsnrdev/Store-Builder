@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/components/storefront/cart-context";
 
 type NavCategory = { id: string; name: string; slug: string };
@@ -20,6 +21,9 @@ export function StorefrontHeader({
 }) {
   const { itemCount } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const homeHref = `/shop/${storeSlug}`;
+  const isHome = pathname === homeHref;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -54,14 +58,18 @@ export function StorefrontHeader({
         </div>
 
         <nav className="hidden items-center gap-5 text-sm font-medium text-white/85 sm:flex">
-          <Link href={`/shop/${storeSlug}`} className="hover:text-white">
+          <Link href={homeHref} className={isHome ? "font-semibold text-white" : "hover:text-white"}>
             Home
           </Link>
-          {categories.map((c) => (
-            <Link key={c.id} href={`/shop/${storeSlug}/category/${c.slug}`} className="hover:text-white">
-              {c.name}
-            </Link>
-          ))}
+          {categories.map((c) => {
+            const href = `/shop/${storeSlug}/category/${c.slug}`;
+            const active = pathname === href;
+            return (
+              <Link key={c.id} href={href} className={active ? "font-semibold text-white" : "hover:text-white"}>
+                {c.name}
+              </Link>
+            );
+          })}
         </nav>
 
         <Link href={`/shop/${storeSlug}/cart`} className="relative flex items-center gap-1 text-sm font-medium text-white">
@@ -109,24 +117,35 @@ export function StorefrontHeader({
           <ul className="flex-1 space-y-1 overflow-y-auto p-4">
             <li>
               <Link
-                href={`/shop/${storeSlug}`}
+                href={homeHref}
                 onClick={() => setMenuOpen(false)}
-                className="block rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                aria-current={isHome ? "page" : undefined}
+                className={`block rounded-md px-2 py-2 text-sm font-medium ${
+                  isHome ? "bg-gray-100 text-gray-900" : "text-gray-700 hover:bg-gray-50"
+                }`}
               >
-                Home
+                Home{isHome ? " (you're here)" : ""}
               </Link>
             </li>
-            {categories.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/shop/${storeSlug}/category/${c.slug}`}
-                  onClick={() => setMenuOpen(false)}
-                  className="block rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  {c.name}
-                </Link>
-              </li>
-            ))}
+            {categories.map((c) => {
+              const href = `/shop/${storeSlug}/category/${c.slug}`;
+              const active = pathname === href;
+              return (
+                <li key={c.id}>
+                  <Link
+                    href={href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`block rounded-md px-2 py-2 text-sm font-medium ${
+                      active ? "bg-gray-100 text-gray-900" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {c.name}
+                    {active ? " (you're here)" : ""}
+                  </Link>
+                </li>
+              );
+            })}
             <li className="mt-1 border-t border-gray-100 pt-1">
               <Link
                 href="/login"
