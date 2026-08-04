@@ -1,5 +1,8 @@
 export function parseCsv(text: string): Record<string, string>[] {
-  const rows = parseCsvRows(text);
+  // Excel (and some other spreadsheet apps) prepend a UTF-8 BOM when saving CSVs —
+  // left in place, it silently attaches to the first header (turning "name" into
+  // "﻿name"), so every row looks like it's missing that column.
+  const rows = parseCsvRows(text.replace(/^﻿/, ""));
   if (rows.length === 0) return [];
   const headers = rows[0].map((h) => h.trim());
   return rows.slice(1).filter((row) => row.some((cell) => cell.trim() !== "")).map((row) => {
