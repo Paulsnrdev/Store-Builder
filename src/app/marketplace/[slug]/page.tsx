@@ -7,6 +7,8 @@ import { Logo } from "@/components/marketing/logo";
 import { MarketingFooter } from "@/components/marketing/footer";
 import { StoreCard } from "@/components/marketing/store-card";
 
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const niche = nicheBySlug(slug);
