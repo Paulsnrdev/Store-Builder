@@ -12,7 +12,9 @@ export async function requireSession() {
 export const getCurrentStore = cache(async () => {
   const session = await requireSession();
   const store = await prisma.store.findFirst({
-    where: { userId: session.user.id },
+    where: {
+      OR: [{ userId: session.user.id }, { members: { some: { userId: session.user.id, status: "ACTIVE" } } }],
+    },
     orderBy: { createdAt: "asc" },
     include: { subscription: { include: { plan: true } } },
   });
@@ -20,3 +22,11 @@ export const getCurrentStore = cache(async () => {
   if (store.isSuspended) redirect("/suspended");
   return store;
 });
+
+/** For pages/actions only the store owner should reach — staff members are redirected away. */
+export async function requireStoreOwner() {
+  const session = await requireSession();
+  const store = await getCurrentStore();
+  if (store.userId !== session.user.id) redirect("/dashboard");
+  return store;
+}

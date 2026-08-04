@@ -191,3 +191,16 @@ export function customerOrderRefundedEmail(data: OrderEmailData) {
     ),
   };
 }
+
+export function staffInviteEmail(data: { storeName: string; acceptUrl: string }) {
+  return {
+    subject: `You've been invited to help manage ${data.storeName} on StoreHike`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2>You're invited to ${data.storeName}</h2>
+        <p>You've been invited to help manage ${data.storeName}'s StoreHike dashboard. Click below to accept — you'll need to sign in or create a free account first.</p>
+        <p><a href="${data.acceptUrl}" style="color:#059669">Accept invitation</a></p>
+      </div>
+    `,
+  };
+}

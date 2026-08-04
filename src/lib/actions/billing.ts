@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentStore } from "@/lib/store";
+import { requireStoreOwner } from "@/lib/store";
 import {
   createPaymentPlan,
   initializeTransaction,
@@ -42,7 +42,7 @@ async function getOrCreateFlutterwavePlanId(plan: Plan, cycle: Cycle): Promise<{
 }
 
 export async function subscribeToPlan(planSlug: string, cycle: Cycle): Promise<SubscribeResult> {
-  const store = await getCurrentStore();
+  const store = await requireStoreOwner();
 
   if (!store.email) {
     return { ok: false, error: "Add a store email in Settings first — Flutterwave needs one to bill you." };
@@ -80,7 +80,7 @@ export async function subscribeToPlan(planSlug: string, cycle: Cycle): Promise<S
 }
 
 export async function cancelSubscription(): Promise<{ ok: true } | { ok: false; error: string }> {
-  const store = await getCurrentStore();
+  const store = await requireStoreOwner();
   const subscription = store.subscription;
   if (!subscription) return { ok: false, error: "No active subscription to cancel." };
 
@@ -112,6 +112,6 @@ export async function cancelSubscription(): Promise<{ ok: true } | { ok: false; 
 }
 
 export async function getSubscriptionStatus(): Promise<string | null> {
-  const store = await getCurrentStore();
+  const store = await requireStoreOwner();
   return store.subscription?.status ?? null;
 }

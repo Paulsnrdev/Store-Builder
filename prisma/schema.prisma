@@ -31,6 +31,7 @@ model User {
   accounts Account[]
   sessions Session[]
   stores   Store[]
+  storeMemberships StoreMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -117,6 +118,7 @@ model Store {
   discounts     Discount[]
   carts         Cart[]
   subscription  Subscription?
+  members       StoreMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -441,4 +443,35 @@ enum SubscriptionStatus {
   ACTIVE
   PAST_DUE
   CANCELED
+}
+
+// ---------- Staff accounts (Business tier) ----------
+
+// The store owner is still Store.userId — this is only for additional staff.
+// PENDING rows may have no userId yet (invited by email, no account linked
+// until they accept); ACTIVE rows always have one.
+model StoreMember {
+  id          String            @id @default(cuid())
+  storeId     String
+  userId      String?
+  email       String
+  status      StoreMemberStatus @default(PENDING)
+  inviteToken String?           @unique
+  invitedAt   DateTime          @default(now())
+  acceptedAt  DateTime?
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([storeId, email])
+  @@index([storeId])
+  @@index([userId])
+}
+
+enum StoreMemberStatus {
+  PENDING
+  ACTIVE
 }

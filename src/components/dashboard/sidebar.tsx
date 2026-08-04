@@ -6,22 +6,23 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 const links = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/analytics", label: "Analytics" },
-  { href: "/dashboard/products", label: "Products" },
-  { href: "/dashboard/categories", label: "Categories" },
-  { href: "/dashboard/orders", label: "Orders" },
-  { href: "/dashboard/customers", label: "Customers" },
-  { href: "/dashboard/shipping", label: "Shipping" },
-  { href: "/dashboard/discounts", label: "Discounts" },
-  { href: "/dashboard/billing", label: "Billing" },
-  { href: "/dashboard/settings", label: "Settings" },
+  { href: "/dashboard", label: "Overview", ownerOnly: false },
+  { href: "/dashboard/analytics", label: "Analytics", ownerOnly: false },
+  { href: "/dashboard/products", label: "Products", ownerOnly: false },
+  { href: "/dashboard/categories", label: "Categories", ownerOnly: false },
+  { href: "/dashboard/orders", label: "Orders", ownerOnly: false },
+  { href: "/dashboard/customers", label: "Customers", ownerOnly: false },
+  { href: "/dashboard/shipping", label: "Shipping", ownerOnly: false },
+  { href: "/dashboard/discounts", label: "Discounts", ownerOnly: false },
+  { href: "/dashboard/team", label: "Team", ownerOnly: true },
+  { href: "/dashboard/billing", label: "Billing", ownerOnly: true },
+  { href: "/dashboard/settings", label: "Settings", ownerOnly: false },
 ];
 
-function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function NavLinks({ pathname, isOwner, onNavigate }: { pathname: string; isOwner: boolean; onNavigate?: () => void }) {
   return (
     <nav className="space-y-1">
-      {links.map((link) => {
+      {links.filter((link) => isOwner || !link.ownerOnly).map((link) => {
         const active = link.href === "/dashboard" ? pathname === link.href : pathname.startsWith(link.href);
         return (
           <Link
@@ -40,18 +41,17 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   );
 }
 
-function PlanBadge({ planName }: { planName: string }) {
+function PlanBadge({ planName, isOwner }: { planName: string; isOwner: boolean }) {
+  const className = "inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700";
+  if (!isOwner) return <span className={className}>{planName} plan</span>;
   return (
-    <Link
-      href="/dashboard/billing"
-      className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100"
-    >
+    <Link href="/dashboard/billing" className={`${className} transition-colors hover:bg-brand-100`}>
       {planName} plan
     </Link>
   );
 }
 
-export function Sidebar({ storeName, planName }: { storeName: string; planName: string }) {
+export function Sidebar({ storeName, planName, isOwner }: { storeName: string; planName: string; isOwner: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -62,9 +62,9 @@ export function Sidebar({ storeName, planName }: { storeName: string; planName: 
         <div>
           <div className="mb-1 px-2 text-lg font-semibold text-gray-900">{storeName}</div>
           <div className="mb-6 px-2">
-            <PlanBadge planName={planName} />
+            <PlanBadge planName={planName} isOwner={isOwner} />
           </div>
-          <NavLinks pathname={pathname} />
+          <NavLinks pathname={pathname} isOwner={isOwner} />
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
@@ -90,7 +90,7 @@ export function Sidebar({ storeName, planName }: { storeName: string; planName: 
           <span className="truncate text-base font-semibold text-gray-900">{storeName}</span>
         </div>
         <div className="ml-auto">
-          <PlanBadge planName={planName} />
+          <PlanBadge planName={planName} isOwner={isOwner} />
         </div>
       </div>
 
@@ -122,7 +122,7 @@ export function Sidebar({ storeName, planName }: { storeName: string; planName: 
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
-            <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+            <NavLinks pathname={pathname} isOwner={isOwner} onNavigate={() => setOpen(false)} />
           </div>
           <div className="border-t border-gray-100 p-4">
             <button

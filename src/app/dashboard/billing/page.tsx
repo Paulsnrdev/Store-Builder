@@ -1,4 +1,4 @@
-import { getCurrentStore } from "@/lib/store";
+import { requireStoreOwner } from "@/lib/store";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { CYCLE_LABEL } from "@/lib/billing-cycles";
 
 export default async function BillingPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const { status } = await searchParams;
-  const store = await getCurrentStore();
+  const store = await requireStoreOwner();
 
   const [plans, productCount] = await Promise.all([
     prisma.plan.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),

@@ -5,7 +5,7 @@ export function AuthCard({
 }: {
   title: string;
   description?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
