@@ -7,11 +7,13 @@ import { signOut } from "next-auth/react";
 
 const links = [
   { href: "/dashboard", label: "Overview" },
+  { href: "/dashboard/analytics", label: "Analytics" },
   { href: "/dashboard/products", label: "Products" },
   { href: "/dashboard/categories", label: "Categories" },
   { href: "/dashboard/orders", label: "Orders" },
   { href: "/dashboard/customers", label: "Customers" },
   { href: "/dashboard/shipping", label: "Shipping" },
+  { href: "/dashboard/discounts", label: "Discounts" },
   { href: "/dashboard/billing", label: "Billing" },
   { href: "/dashboard/settings", label: "Settings" },
 ];
