@@ -5,7 +5,7 @@ export type Cycle = "MONTHLY" | "BIANNUAL" | "YEARLY";
 
 export const CYCLE_LABEL: Record<Cycle, string> = {
   MONTHLY: "Monthly",
-  BIANNUAL: "Every 6 months",
+  BIANNUAL: "Bi-Annually",
   YEARLY: "Yearly",
 };
 
