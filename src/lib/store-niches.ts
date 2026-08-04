@@ -1,13 +1,16 @@
 export const STORE_NICHES = [
   { value: "FASHION_APPAREL", slug: "fashion-apparel", label: "Fashion & Apparel" },
+  { value: "CLOTHING", slug: "clothing", label: "Clothing" },
   { value: "BEAUTY_SKINCARE", slug: "beauty-skincare", label: "Beauty & Skincare" },
   { value: "ELECTRONICS_GADGETS", slug: "electronics-gadgets", label: "Electronics & Gadgets" },
+  { value: "TECH", slug: "tech", label: "Tech" },
   { value: "FOOD_GROCERIES", slug: "food-groceries", label: "Food & Groceries" },
   { value: "HOME_LIVING", slug: "home-living", label: "Home & Living" },
   { value: "KIDS_BABY", slug: "kids-baby", label: "Kids & Baby" },
   { value: "HEALTH_WELLNESS", slug: "health-wellness", label: "Health & Wellness" },
   { value: "BOOKS_STATIONERY", slug: "books-stationery", label: "Books & Stationery" },
   { value: "ARTS_CRAFTS", slug: "arts-crafts", label: "Arts & Crafts" },
+  { value: "AUTOMOBILES", slug: "automobiles", label: "Automobiles" },
   { value: "OTHER", slug: "other", label: "Other" },
 ] as const;
 
