@@ -25,7 +25,7 @@ export default async function RegisterPage() {
   }
 
   return (
-    <AuthCard title="Create your store" description="Start selling in minutes">
+    <AuthCard title="Create your store" description="Start selling in minutes" size="md">
       <RegisterForm />
       <p className="text-center text-sm text-gray-500">
         Already have an account?{" "}
