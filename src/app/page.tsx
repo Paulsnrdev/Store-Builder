@@ -75,6 +75,9 @@ export default function MarketingHomePage() {
               Create your store
             </Button>
           </div>
+          <Link href="/marketplace" className="mt-4 inline-block text-sm font-medium text-gray-500 hover:text-gray-900 sm:hidden">
+            Browse the marketplace →
+          </Link>
         </div>
       </section>
 
