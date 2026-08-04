@@ -9,6 +9,7 @@ export const TIER = { FREE: 0, LITE: 1, BASIC: 2, GROWTH: 3, BUSINESS: 4 } as co
 // Each gated feature's minimum required tier, matching the marketing pricing page.
 export const FEATURE_TIER = {
   CARD_PAYMENTS: TIER.LITE,
+  AUTO_BANK_TRANSFER: TIER.LITE,
   WHATSAPP_MESSAGING: TIER.LITE,
   PRODUCT_VARIANTS: TIER.BASIC,
   THEME_CUSTOMIZATION: TIER.BASIC,

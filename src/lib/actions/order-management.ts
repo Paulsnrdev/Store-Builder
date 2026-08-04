@@ -105,7 +105,7 @@ export async function cancelOrder(orderId: string): Promise<ActionResult> {
   const store = await getCurrentStore();
   const order = await loadOwnedOrder(orderId, store.id);
   if (!order) return { ok: false, error: "Order not found." };
-  if (order.status === "DELIVERED" || order.status === "CANCELLED" || order.status === "REFUNDED") {
+  if (order.status === "DELIVERED" || order.status === "CANCELLED" || order.status === "REFUNDED" || order.status === "EXPIRED") {
     return { ok: false, error: `Cannot cancel an order that is already ${order.status.toLowerCase()}.` };
   }
 
@@ -125,7 +125,7 @@ export async function refundOrder(orderId: string): Promise<ActionResult> {
   const store = await getCurrentStore();
   const order = await loadOwnedOrder(orderId, store.id);
   if (!order) return { ok: false, error: "Order not found." };
-  if (order.status === "PENDING" || order.status === "CANCELLED" || order.status === "REFUNDED") {
+  if (order.status === "PENDING" || order.status === "CANCELLED" || order.status === "REFUNDED" || order.status === "EXPIRED") {
     return { ok: false, error: `Cannot refund an order that is ${order.status.toLowerCase()}.` };
   }
 

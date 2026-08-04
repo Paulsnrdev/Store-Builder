@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-const STATUSES = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
+const STATUSES = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED", "EXPIRED"];
 const PAYMENT_METHODS = ["FLUTTERWAVE", "BANK_TRANSFER", "CASH_ON_DELIVERY"];
 
 export default async function OrdersPage({

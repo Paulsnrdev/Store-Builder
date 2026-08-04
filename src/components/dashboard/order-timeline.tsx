@@ -27,7 +27,7 @@ export function OrderTimeline({
   deliveredAt: Date | null;
   updatedAt: Date;
 }) {
-  const isTerminal = status === "CANCELLED" || status === "REFUNDED";
+  const isTerminal = status === "CANCELLED" || status === "REFUNDED" || status === "EXPIRED";
   const dates: Record<string, Date | null> = { PENDING: createdAt, PAID: paidAt, PROCESSING: null, SHIPPED: shippedAt, DELIVERED: deliveredAt };
 
   // While terminal, treat every step whose timestamp we actually have as reached; PROCESSING has no
@@ -56,8 +56,8 @@ export function OrderTimeline({
         })}
       </ol>
       {isTerminal && (
-        <div className={`mt-3 rounded-md px-3 py-2 text-sm font-medium ${status === "CANCELLED" ? "bg-gray-100 text-gray-600" : "bg-red-50 text-red-700"}`}>
-          {status === "CANCELLED" ? "Cancelled" : "Refunded"} — {fmt(updatedAt)}
+        <div className={`mt-3 rounded-md px-3 py-2 text-sm font-medium ${status === "REFUNDED" ? "bg-red-50 text-red-700" : "bg-gray-100 text-gray-600"}`}>
+          {status === "CANCELLED" ? "Cancelled" : status === "REFUNDED" ? "Refunded" : "Expired"} — {fmt(updatedAt)}
         </div>
       )}
     </div>

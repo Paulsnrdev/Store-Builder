@@ -40,8 +40,8 @@ export function OrderActions({ orderId, status, paymentMethod }: Props) {
   const canMarkProcessing = status === "PAID";
   const canMarkShipped = status === "PAID" || status === "PROCESSING";
   const canMarkDelivered = status === "SHIPPED";
-  const canCancel = status !== "DELIVERED" && status !== "CANCELLED" && status !== "REFUNDED";
-  const canRefund = status !== "PENDING" && status !== "CANCELLED" && status !== "REFUNDED";
+  const canCancel = status !== "DELIVERED" && status !== "CANCELLED" && status !== "REFUNDED" && status !== "EXPIRED";
+  const canRefund = status !== "PENDING" && status !== "CANCELLED" && status !== "REFUNDED" && status !== "EXPIRED";
 
   const hasActions = canMarkPaid || canMarkProcessing || canMarkShipped || canMarkDelivered || canCancel || canRefund;
   if (!hasActions) return null;

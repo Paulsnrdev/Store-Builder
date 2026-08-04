@@ -6,6 +6,7 @@ export const orderStatusLabel: Record<string, string> = {
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
   REFUNDED: "Refunded",
+  EXPIRED: "Expired",
 };
 
 export const orderStatusClass: Record<string, string> = {
@@ -16,6 +17,7 @@ export const orderStatusClass: Record<string, string> = {
   DELIVERED: "bg-green-100 text-green-700",
   CANCELLED: "bg-gray-100 text-gray-500",
   REFUNDED: "bg-red-100 text-red-700",
+  EXPIRED: "bg-gray-100 text-gray-500",
 };
 
 export const paymentMethodLabel: Record<string, string> = {
