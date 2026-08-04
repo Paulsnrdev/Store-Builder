@@ -1,9 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { assignStorePlan, type AdminFormState } from "@/lib/actions/admin-stores";
+import { addCycle, type Cycle } from "@/lib/billing-cycles";
 
 type Plan = { id: string; name: string };
+
+function toDateInputValue(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
 
 export function PlanAssignmentForm({
   storeId,
@@ -15,6 +20,11 @@ export function PlanAssignmentForm({
   initial?: { planId: string; interval: string; status: string; currentPeriodEnd: string | null };
 }) {
   const [state, formAction, pending] = useActionState(assignStorePlan.bind(null, storeId), {} as AdminFormState);
+  const initialInterval = (initial?.interval as Cycle) ?? "MONTHLY";
+  // Mirrors how the real Flutterwave webhook computes currentPeriodEnd (addCycle(new Date(),
+  // cycle)) — auto-filled here so the admin isn't guessing a date, but still editable for
+  // backdating or syncing with an actual external subscription.
+  const [periodEnd, setPeriodEnd] = useState(initial?.currentPeriodEnd || toDateInputValue(addCycle(new Date(), initialInterval)));
 
   return (
     <form action={formAction} className="max-w-md space-y-4">
@@ -42,7 +52,8 @@ export function PlanAssignmentForm({
           <label className="block text-sm font-medium text-gray-700">Billing interval</label>
           <select
             name="interval"
-            defaultValue={initial?.interval ?? "MONTHLY"}
+            defaultValue={initialInterval}
+            onChange={(e) => setPeriodEnd(toDateInputValue(addCycle(new Date(), e.target.value as Cycle)))}
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="MONTHLY">Monthly</option>
@@ -70,9 +81,11 @@ export function PlanAssignmentForm({
         <input
           name="currentPeriodEnd"
           type="date"
-          defaultValue={initial?.currentPeriodEnd ?? ""}
+          value={periodEnd}
+          onChange={(e) => setPeriodEnd(e.target.value)}
           className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
+        <p className="mt-1 text-xs text-gray-400">Auto-set from the billing interval — adjust if it should differ.</p>
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { NICHE_VALUES } from "@/lib/store-niches";
+import { addCycle } from "@/lib/billing-cycles";
 
 export type AdminFormState = { error?: string; success?: boolean };
 
@@ -90,11 +91,15 @@ export async function assignStorePlan(storeId: string, _prev: AdminFormState, fo
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
+  // Left blank, currentPeriodEnd defaults to one interval from now — matching what a real
+  // Flutterwave charge sets (see handleNewSubscriptionCharge in the webhook route). Without
+  // this, a manually-assigned plan has no period end, so canceling it drops entitlement
+  // immediately instead of honoring the grace period isSubscriptionEntitled expects.
   const data = {
     planId: parsed.data.planId,
     interval: parsed.data.interval,
     status: parsed.data.status,
-    currentPeriodEnd: parsed.data.currentPeriodEnd ? new Date(parsed.data.currentPeriodEnd) : null,
+    currentPeriodEnd: parsed.data.currentPeriodEnd ? new Date(parsed.data.currentPeriodEnd) : addCycle(new Date(), parsed.data.interval),
   };
 
   await prisma.subscription.upsert({
