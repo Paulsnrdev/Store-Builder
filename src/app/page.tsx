@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Store, ShoppingCart, ClipboardCheck, ShieldCheck, Sparkles } from "lucide-react";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { MarketingFooter } from "@/components/marketing/footer";
 import { Logo } from "@/components/marketing/logo";
@@ -7,18 +8,22 @@ import { Card } from "@/components/ui/card";
 
 const FEATURES = [
   {
+    icon: Store,
     title: "A real storefront",
     body: "Products, categories, variants, and search — hosted at your own link, not buried in a DM thread.",
   },
   {
+    icon: ShoppingCart,
     title: "Cart & checkout",
     body: "Customers pay by card, bank transfer, or cash on delivery. Shipping is calculated by state automatically.",
   },
   {
+    icon: ClipboardCheck,
     title: "Order management",
     body: "Track every order from pending to delivered, print invoices, and message customers on WhatsApp in one tap.",
   },
   {
+    icon: ShieldCheck,
     title: "Never oversell",
     body: "Stock is reserved the moment an order is placed, so two buyers can never both check out with the last unit.",
   },
@@ -48,18 +53,28 @@ export default function MarketingHomePage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl animate-slide-up px-4 py-20 text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
-          Turn your Instagram &amp; WhatsApp shop into a real store
-        </h1>
-        <p className="mt-4 text-lg text-gray-600">
-          Stop taking orders one DM at a time. StoreHike gives Nigerian sellers a hosted storefront, cart,
-          checkout, and order dashboard set up in minutes.
-        </p>
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <Button href="/register" size="md" className="px-6 py-3">
-            Create your store
-          </Button>
+      <section className="relative overflow-hidden">
+        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-200/50 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 top-10 h-96 w-96 rounded-full bg-accent-100 blur-3xl" />
+
+        <div className="relative mx-auto max-w-3xl animate-slide-up px-4 py-20 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
+            <Sparkles className="h-3.5 w-3.5" />
+            Built for Nigerian Instagram &amp; WhatsApp sellers
+          </span>
+          <h1 className="mt-5 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            Turn your shop into a{" "}
+            <span className="bg-linear-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent">real store</span>
+          </h1>
+          <p className="mt-5 text-lg text-gray-600">
+            Stop taking orders one DM at a time. StoreHike gives Nigerian sellers a hosted storefront, cart,
+            checkout, and order dashboard set up in minutes.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <Button href="/register" size="md" className="px-6 py-3">
+              Create your store
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -68,10 +83,13 @@ export default function MarketingHomePage() {
           {FEATURES.map((f, i) => (
             <Card
               key={f.title}
-              className="animate-slide-up transition-shadow duration-200 hover:shadow-card-hover"
+              className="animate-slide-up transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover"
               style={{ animationDelay: `${i * 75}ms` }}
             >
-              <h3 className="font-semibold text-gray-900">{f.title}</h3>
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-brand-500 to-accent-500 text-white">
+                <f.icon className="h-5 w-5" />
+              </span>
+              <h3 className="mt-3 font-semibold text-gray-900">{f.title}</h3>
               <p className="mt-2 text-sm text-gray-600">{f.body}</p>
             </Card>
           ))}
@@ -80,11 +98,11 @@ export default function MarketingHomePage() {
 
       <section className="px-4 py-16">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-semibold text-gray-900">How it works</h2>
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900">How it works</h2>
           <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
             {STEPS.map((s, i) => (
               <div key={s.step} className="animate-slide-up text-center" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand-500 to-accent-500 text-sm font-semibold text-white shadow-glow">
                   {s.step}
                 </div>
                 <h3 className="mt-3 font-semibold text-gray-900">{s.title}</h3>

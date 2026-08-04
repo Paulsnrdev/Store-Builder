@@ -4,19 +4,34 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import {
+  LayoutDashboard,
+  BarChart3,
+  Package,
+  FolderTree,
+  ShoppingBag,
+  Users,
+  Truck,
+  Percent,
+  UserPlus,
+  CreditCard,
+  Settings,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 
-const links = [
-  { href: "/dashboard", label: "Overview", ownerOnly: false },
-  { href: "/dashboard/analytics", label: "Analytics", ownerOnly: false },
-  { href: "/dashboard/products", label: "Products", ownerOnly: false },
-  { href: "/dashboard/categories", label: "Categories", ownerOnly: false },
-  { href: "/dashboard/orders", label: "Orders", ownerOnly: false },
-  { href: "/dashboard/customers", label: "Customers", ownerOnly: false },
-  { href: "/dashboard/shipping", label: "Shipping", ownerOnly: false },
-  { href: "/dashboard/discounts", label: "Discounts", ownerOnly: false },
-  { href: "/dashboard/team", label: "Team", ownerOnly: true },
-  { href: "/dashboard/billing", label: "Billing", ownerOnly: true },
-  { href: "/dashboard/settings", label: "Settings", ownerOnly: false },
+const links: { href: string; label: string; icon: LucideIcon; ownerOnly: boolean }[] = [
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, ownerOnly: false },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, ownerOnly: false },
+  { href: "/dashboard/products", label: "Products", icon: Package, ownerOnly: false },
+  { href: "/dashboard/categories", label: "Categories", icon: FolderTree, ownerOnly: false },
+  { href: "/dashboard/orders", label: "Orders", icon: ShoppingBag, ownerOnly: false },
+  { href: "/dashboard/customers", label: "Customers", icon: Users, ownerOnly: false },
+  { href: "/dashboard/shipping", label: "Shipping", icon: Truck, ownerOnly: false },
+  { href: "/dashboard/discounts", label: "Discounts", icon: Percent, ownerOnly: false },
+  { href: "/dashboard/team", label: "Team", icon: UserPlus, ownerOnly: true },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, ownerOnly: true },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, ownerOnly: false },
 ];
 
 function NavLinks({ pathname, isOwner, onNavigate }: { pathname: string; isOwner: boolean; onNavigate?: () => void }) {
@@ -24,15 +39,19 @@ function NavLinks({ pathname, isOwner, onNavigate }: { pathname: string; isOwner
     <nav className="space-y-1">
       {links.filter((link) => isOwner || !link.ownerOnly).map((link) => {
         const active = link.href === "/dashboard" ? pathname === link.href : pathname.startsWith(link.href);
+        const Icon = link.icon;
         return (
           <Link
             key={link.href}
             href={link.href}
             onClick={onNavigate}
-            className={`block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-              active ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-gray-100"
+            className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+              active
+                ? "bg-linear-to-r from-brand-500 to-accent-500 text-white shadow-glow"
+                : "text-gray-600 hover:bg-brand-50 hover:text-gray-900"
             }`}
           >
+            <Icon className={`h-4 w-4 ${active ? "text-white" : "text-gray-400"}`} />
             {link.label}
           </Link>
         );
@@ -42,10 +61,11 @@ function NavLinks({ pathname, isOwner, onNavigate }: { pathname: string; isOwner
 }
 
 function PlanBadge({ planName, isOwner }: { planName: string; isOwner: boolean }) {
-  const className = "inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700";
+  const className =
+    "inline-flex items-center gap-1 rounded-full bg-linear-to-r from-brand-500 to-accent-500 px-2.5 py-0.5 text-xs font-medium text-white";
   if (!isOwner) return <span className={className}>{planName} plan</span>;
   return (
-    <Link href="/dashboard/billing" className={`${className} transition-colors hover:bg-brand-100`}>
+    <Link href="/dashboard/billing" className={`${className} transition-transform hover:scale-105`}>
       {planName} plan
     </Link>
   );
@@ -58,9 +78,9 @@ export function Sidebar({ storeName, planName, isOwner }: { storeName: string; p
   return (
     <>
       {/* Desktop/tablet sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r border-gray-200 bg-white sm:flex sm:flex-col sm:justify-between sm:p-4 print:hidden">
+      <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white sm:flex sm:flex-col sm:justify-between sm:p-4 print:hidden">
         <div>
-          <div className="mb-1 px-2 text-lg font-semibold text-gray-900">{storeName}</div>
+          <div className="mb-1 px-2 text-lg font-bold tracking-tight text-gray-900">{storeName}</div>
           <div className="mb-6 px-2">
             <PlanBadge planName={planName} isOwner={isOwner} />
           </div>
@@ -68,8 +88,9 @@ export function Sidebar({ storeName, planName, isOwner }: { storeName: string; p
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="rounded-md px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100"
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100"
         >
+          <LogOut className="h-4 w-4" />
           Sign out
         </button>
       </aside>
@@ -130,8 +151,9 @@ export function Sidebar({ storeName, planName, isOwner }: { storeName: string; p
                 setOpen(false);
                 signOut({ callbackUrl: "/login" });
               }}
-              className="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100"
             >
+              <LogOut className="h-4 w-4" />
               Sign out
             </button>
           </div>

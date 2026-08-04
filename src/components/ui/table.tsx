@@ -2,14 +2,14 @@ import { cn } from "@/lib/cn";
 
 export function TableShell({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-gray-200 bg-white", className)} {...rest}>
+    <div className={cn("overflow-hidden rounded-xl border border-gray-200 bg-white", className)} {...rest}>
       <div className="overflow-x-auto">{children}</div>
     </div>
   );
 }
 
 export function TableHead({ children }: { children: React.ReactNode }) {
-  return <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">{children}</thead>;
+  return <thead className="bg-brand-50/60 text-left text-xs font-medium uppercase tracking-wide text-brand-800">{children}</thead>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {

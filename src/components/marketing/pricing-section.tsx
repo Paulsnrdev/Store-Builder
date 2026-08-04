@@ -110,11 +110,11 @@ export function PricingSection() {
               <div
                 key={plan.name}
                 className={`relative flex flex-col rounded-xl border bg-white p-5 transition-shadow duration-200 hover:shadow-card-hover ${
-                  plan.popular ? "border-brand-600 shadow-card-hover" : "border-gray-200 shadow-card"
+                  plan.popular ? "border-brand-600 shadow-glow" : "border-gray-200 shadow-card"
                 }`}
               >
                 {plan.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-600 px-3 py-0.5 text-xs font-medium text-white">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-linear-to-r from-brand-500 to-accent-500 px-3 py-0.5 text-xs font-medium text-white">
                     Most popular
                   </span>
                 )}

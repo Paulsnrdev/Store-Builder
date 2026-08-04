@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShoppingBag, TrendingUp, Clock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { getStockStatus } from "@/lib/inventory-status";
@@ -6,6 +7,7 @@ import { orderStatusLabel, orderStatusClass } from "@/lib/order-status-display";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { StatTile } from "@/components/dashboard/stat-tile";
 
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -70,22 +72,13 @@ export default async function DashboardHomePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Welcome back</h1>
       <p className="mt-1 text-sm text-gray-500">{store.name}</p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <p className="text-xs font-medium uppercase text-gray-500">Today&apos;s orders</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">{todayOrdersCount}</p>
-        </Card>
-        <Card>
-          <p className="text-xs font-medium uppercase text-gray-500">Revenue this month</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">₦{revenueThisMonth.toLocaleString()}</p>
-        </Card>
-        <Card>
-          <p className="text-xs font-medium uppercase text-gray-500">Pending orders</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">{pendingOrders.length}</p>
-        </Card>
+        <StatTile icon={ShoppingBag} tone="accent" label="Today's orders" value={todayOrdersCount.toString()} />
+        <StatTile icon={TrendingUp} tone="brand" label="Revenue this month" value={`₦${revenueThisMonth.toLocaleString()}`} />
+        <StatTile icon={Clock} tone="amber" label="Pending orders" value={pendingOrders.length.toString()} />
       </div>
 
       <Card className="mt-4">
