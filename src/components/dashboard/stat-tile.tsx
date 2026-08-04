@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 
 const TONE_CLASS = {
   brand: "bg-brand-50 text-brand-600",
-  accent: "bg-accent-50 text-accent-600",
+  accent: "bg-brand-100 text-brand-700",
   amber: "bg-amber-50 text-amber-600",
 } as const;
 

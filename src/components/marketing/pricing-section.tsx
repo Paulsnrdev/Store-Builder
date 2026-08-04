@@ -114,7 +114,7 @@ export function PricingSection() {
                 }`}
               >
                 {plan.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-linear-to-r from-brand-500 to-accent-500 px-3 py-0.5 text-xs font-medium text-white">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-linear-to-r from-brand-400 to-brand-600 px-3 py-0.5 text-xs font-medium text-white">
                     Most popular
                   </span>
                 )}

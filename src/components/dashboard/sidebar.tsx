@@ -47,7 +47,7 @@ function NavLinks({ pathname, isOwner, onNavigate }: { pathname: string; isOwner
             onClick={onNavigate}
             className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
               active
-                ? "bg-linear-to-r from-brand-500 to-accent-500 text-white shadow-glow"
+                ? "bg-linear-to-r from-brand-400 to-brand-600 text-white shadow-glow"
                 : "text-gray-600 hover:bg-brand-50 hover:text-gray-900"
             }`}
           >
@@ -62,7 +62,7 @@ function NavLinks({ pathname, isOwner, onNavigate }: { pathname: string; isOwner
 
 function PlanBadge({ planName, isOwner }: { planName: string; isOwner: boolean }) {
   const className =
-    "inline-flex items-center gap-1 rounded-full bg-linear-to-r from-brand-500 to-accent-500 px-2.5 py-0.5 text-xs font-medium text-white";
+    "inline-flex items-center gap-1 rounded-full bg-linear-to-r from-brand-400 to-brand-600 px-2.5 py-0.5 text-xs font-medium text-white";
   if (!isOwner) return <span className={className}>{planName} plan</span>;
   return (
     <Link href="/dashboard/billing" className={`${className} transition-transform hover:scale-105`}>

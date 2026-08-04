@@ -55,7 +55,7 @@ export default function MarketingHomePage() {
 
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-200/50 blur-3xl" />
-        <div className="pointer-events-none absolute -right-32 top-10 h-96 w-96 rounded-full bg-accent-100 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 top-10 h-96 w-96 rounded-full bg-brand-100 blur-3xl" />
 
         <div className="relative mx-auto max-w-3xl animate-slide-up px-4 py-20 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
@@ -64,7 +64,7 @@ export default function MarketingHomePage() {
           </span>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
             Turn your shop into a{" "}
-            <span className="bg-linear-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent">real store</span>
+            <span className="bg-linear-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent">real store</span>
           </h1>
           <p className="mt-5 text-lg text-gray-600">
             Stop taking orders one DM at a time. StoreHike gives Nigerian sellers a hosted storefront, cart,
@@ -86,7 +86,7 @@ export default function MarketingHomePage() {
               className="animate-slide-up transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover"
               style={{ animationDelay: `${i * 75}ms` }}
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-brand-500 to-accent-500 text-white">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-brand-400 to-brand-600 text-white">
                 <f.icon className="h-5 w-5" />
               </span>
               <h3 className="mt-3 font-semibold text-gray-900">{f.title}</h3>
@@ -102,7 +102,7 @@ export default function MarketingHomePage() {
           <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
             {STEPS.map((s, i) => (
               <div key={s.step} className="animate-slide-up text-center" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand-500 to-accent-500 text-sm font-semibold text-white shadow-glow">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand-400 to-brand-600 text-sm font-semibold text-white shadow-glow">
                   {s.step}
                 </div>
                 <h3 className="mt-3 font-semibold text-gray-900">{s.title}</h3>
