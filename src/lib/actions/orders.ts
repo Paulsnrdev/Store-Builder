@@ -2,10 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { priceCartItems, type CartItemRequest } from "@/lib/order-pricing";
-import { reserveStock, restoreStock, InsufficientStockError } from "@/lib/inventory";
+import { reserveStock, InsufficientStockError } from "@/lib/inventory";
 import { validateDiscountCode } from "@/lib/discounts";
 import { randomOrderNumber } from "@/lib/order-number";
-import { initializeTransaction, initiateBankTransferCharge, FLUTTERWAVE_TX_PREFIX, AUTO_BANK_TRANSFER_EXPIRY_MINUTES } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
 import { customerOrderPendingEmail, sellerOrderPendingEmail } from "@/lib/email-templates";
 import { hasFeature } from "@/lib/plan-features";
@@ -20,7 +19,9 @@ type PlaceOrderInput = {
   customerNote?: string;
 };
 
-type PlaceOrderResult = { ok: true; orderNumber: string; flutterwavePaymentLink?: string } | { ok: false; error: string };
+type PlaceOrderResult =
+  | { ok: true; orderId: string; orderNumber: string; flutterwave?: { publicKey: string; amount: number; txRef: string } }
+  | { ok: false; error: string };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
   const store = await prisma.store.findFirst({
@@ -31,6 +32,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   if (input.paymentMethod === "FLUTTERWAVE" && !hasFeature(store.subscription, "CARD_PAYMENTS")) {
     return { ok: false, error: "Card payments aren't available for this store yet." };
+  }
+  if (input.paymentMethod === "FLUTTERWAVE" && !store.flutterwavePublicKey) {
+    return { ok: false, error: "Card payments aren't set up for this store yet." };
   }
 
   if (!input.customer.name.trim() || !input.customer.phone.trim()) {
@@ -132,40 +136,19 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       return created;
     });
 
+    // Card checkout happens entirely client-side against the seller's own
+    // Flutterwave account (their public key, passed straight through to the
+    // browser widget) — StoreHike's server never calls Flutterwave for this.
+    // "Pending" emails don't apply here; the buyer/seller "paid" emails go out
+    // once the widget's callback confirms payment (see confirmFlutterwavePayment
+    // in src/lib/actions/order-status.ts).
     if (input.paymentMethod === "FLUTTERWAVE") {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const result = await initializeTransaction({
-        email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storehike.ng`,
-        name: input.customer.name,
-        phone: input.customer.phone,
-        amount: total,
-        currency: store.currency,
-        txRef: `${FLUTTERWAVE_TX_PREFIX}${order.orderNumber}`,
-        redirectUrl: `${appUrl}/shop/${store.slug}/order/${order.orderNumber}`,
-        subaccountId: store.flutterwaveSubaccountId,
-        storeName: store.name,
-      });
-
-      if (!result.ok) {
-        // Payment couldn't start — the order was already committed above, but the buyer never
-        // completed checkout, so undo it: release the reserved stock, give back any discount
-        // usage, and delete the order. Otherwise it sits as a phantom PENDING order on the
-        // seller's dashboard that the buyer doesn't know exists and never gets paid.
-        await prisma.$transaction(async (tx) => {
-          await restoreStock(tx, priced.lineItems);
-          if (discountId) {
-            await tx.discount.update({ where: { id: discountId }, data: { usageCount: { decrement: 1 } } });
-          }
-          await tx.order.delete({ where: { id: order.id } });
-        });
-        return { ok: false, error: result.error };
-      }
-
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { flutterwaveTxRef: `${FLUTTERWAVE_TX_PREFIX}${order.orderNumber}` },
-      });
-      return { ok: true, orderNumber: order.orderNumber, flutterwavePaymentLink: result.paymentLink };
+      return {
+        ok: true,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        flutterwave: { publicKey: store.flutterwavePublicKey!, amount: total, txRef: order.orderNumber },
+      };
     }
 
     const emailData = {
@@ -176,50 +159,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       items: priced.lineItems,
     };
 
-    // Auto-generated bank transfer: a temporary Flutterwave virtual account,
-    // confirmed automatically by the webhook once paid, released by the expiry
-    // cron if not. Falls through to the static seller-account flow below on any
-    // failure — checkout should never break just because Flutterwave's charge
-    // API had a hiccup.
-    if (input.paymentMethod === "BANK_TRANSFER" && hasFeature(store.subscription, "AUTO_BANK_TRANSFER")) {
-      const txRef = `${FLUTTERWAVE_TX_PREFIX}${order.orderNumber}`;
-      const charge = await initiateBankTransferCharge({
-        email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storehike.ng`,
-        name: input.customer.name,
-        phone: input.customer.phone,
-        amount: total,
-        currency: store.currency,
-        txRef,
-        subaccountId: store.flutterwaveSubaccountId,
-      });
-
-      if (charge.ok) {
-        const expiresAt = new Date(Date.now() + AUTO_BANK_TRANSFER_EXPIRY_MINUTES * 60_000);
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            flutterwaveTxRef: txRef,
-            bankTransferAccountNumber: charge.accountNumber,
-            bankTransferBankName: charge.bankName,
-            bankTransferAccountExpiresAt: expiresAt,
-          },
-        });
-
-        const paymentInstructions = `Please transfer ₦${total.toLocaleString()} to ${charge.bankName}, account number ${charge.accountNumber}, within ${AUTO_BANK_TRANSFER_EXPIRY_MINUTES} minutes. We'll confirm your order automatically once payment is received.`;
-
-        if (store.email) {
-          await sendEmail({ to: store.email, ...sellerOrderPendingEmail(emailData, "bank transfer") });
-        }
-        if (input.customer.email) {
-          await sendEmail({ to: input.customer.email, ...customerOrderPendingEmail(emailData, paymentInstructions), replyTo: store.email });
-        }
-
-        return { ok: true, orderNumber: order.orderNumber };
-      }
-    }
-
-    // Bank transfer (no AUTO_BANK_TRANSFER feature, or the charge call above
-    // failed) / cash on delivery: order is PENDING until the seller confirms manually.
+    // Bank transfer (seller's own static account) / cash on delivery: order is
+    // PENDING until the seller confirms manually.
     const paymentMethodLabel = input.paymentMethod === "BANK_TRANSFER" ? "bank transfer" : "cash on delivery";
     const paymentInstructions =
       input.paymentMethod === "BANK_TRANSFER"
@@ -235,7 +176,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       await sendEmail({ to: input.customer.email, ...customerOrderPendingEmail(emailData, paymentInstructions), replyTo: store.email });
     }
 
-    return { ok: true, orderNumber: order.orderNumber };
+    return { ok: true, orderId: order.id, orderNumber: order.orderNumber };
   } catch (err) {
     if (err instanceof InsufficientStockError) {
       return { ok: false, error: err.message };

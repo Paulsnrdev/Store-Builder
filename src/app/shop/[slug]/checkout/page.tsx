@@ -15,7 +15,9 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
       <CheckoutForm
         storeId={store.id}
         storeSlug={store.slug}
+        storeName={store.name}
         allowCardPayments={hasFeature(store.subscription, "CARD_PAYMENTS")}
+        flutterwavePublicKey={store.flutterwavePublicKey}
         zones={zones.map((z) => ({
           id: z.id,
           name: z.name,

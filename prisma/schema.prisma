@@ -99,7 +99,7 @@ model Store {
   announcementText        String?
   announcementEnabled     Boolean @default(false)
   isPublished             Boolean @default(false)
-  flutterwaveSubaccountId String?
+  flutterwavePublicKey    String?
   bankAccountVerified     Boolean @default(false)
   bankName                String?
   bankAccountNumber       String?
@@ -278,13 +278,6 @@ model Order {
   customerNote     String?
   trackingNote     String?
 
-  // Set only when a dynamic Flutterwave virtual account was generated for this
-  // order (AUTO_BANK_TRANSFER feature) — distinct from the seller's own static
-  // Store.bankName/bankAccountNumber used in the manual bank-transfer fallback.
-  bankTransferAccountNumber    String?
-  bankTransferBankName         String?
-  bankTransferAccountExpiresAt DateTime?
-
   store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
   customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
   items    OrderItem[]
@@ -364,7 +357,6 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   REFUNDED
-  EXPIRED
 }
 
 enum PaymentMethod {

@@ -8,12 +8,6 @@ const FLUTTERWAVE_BASE_URL = "https://api.flutterwave.com/v3";
 // sends to Flutterwave — orders and subscriptions alike — must start with this.
 export const FLUTTERWAVE_TX_PREFIX = "SH-";
 
-// How long a generated bank-transfer virtual account stays valid. The expiry
-// sweep (src/app/api/cron/expire-orders/route.ts) is the authority on releasing
-// stock once this passes — independent of whatever validity window Flutterwave's
-// own virtual account actually has.
-export const AUTO_BANK_TRANSFER_EXPIRY_MINUTES = 30;
-
 type InitializeTransactionInput = {
   email: string;
   name: string;
@@ -22,7 +16,6 @@ type InitializeTransactionInput = {
   currency: string;
   txRef: string;
   redirectUrl: string;
-  subaccountId?: string | null;
   storeName: string;
   /** Enrolls this charge in a Flutterwave Payment Plan for recurring auto-billing. */
   paymentPlanId?: string;
@@ -44,9 +37,6 @@ export async function initializeTransaction(input: InitializeTransactionInput): 
     customer: { email: input.email, phonenumber: input.phone, name: input.name },
     customizations: { title: input.storeName },
   };
-  if (input.subaccountId) {
-    body.subaccounts = [{ id: input.subaccountId }];
-  }
   if (input.paymentPlanId) {
     body.payment_plan = input.paymentPlanId;
   }
@@ -66,68 +56,6 @@ export async function initializeTransaction(input: InitializeTransactionInput): 
   }
 
   return { ok: true, paymentLink: json.data.link };
-}
-
-type InitiateBankTransferChargeInput = {
-  email: string;
-  name: string;
-  phone: string;
-  amount: number;
-  currency: string;
-  txRef: string;
-  subaccountId?: string | null;
-};
-
-type InitiateBankTransferChargeResult =
-  | { ok: true; accountNumber: string; bankName: string }
-  | { ok: false; error: string };
-
-// Flutterwave's v3 direct-charge "Bank Transfer" product: generates a one-off
-// NGN virtual account for this specific charge. The account details come back
-// nested under data.meta.authorization per Flutterwave's documented shape, but
-// this hasn't been exercised against a live sandbox response yet — if the
-// expected fields are missing, this logs the raw payload and fails closed
-// (caller falls back to the seller's static bank instructions) rather than
-// risking showing a buyer a malformed/undefined account number.
-export async function initiateBankTransferCharge(input: InitiateBankTransferChargeInput): Promise<InitiateBankTransferChargeResult> {
-  const secretKey = process.env.FLUTTERWAVE_SECRET_KEY;
-  if (!secretKey) return { ok: false, error: "Flutterwave is not configured for this store yet." };
-
-  const body: Record<string, unknown> = {
-    tx_ref: input.txRef,
-    amount: input.amount,
-    currency: input.currency,
-    email: input.email,
-    phonenumber: input.phone,
-    fullname: input.name,
-  };
-  if (input.subaccountId) {
-    body.subaccounts = [{ id: input.subaccountId }];
-  }
-
-  const res = await fetch(`${FLUTTERWAVE_BASE_URL}/charges?type=bank_transfer`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${secretKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  const json = await res.json();
-  if (!res.ok || (json.status !== "success" && json.status !== "pending")) {
-    return { ok: false, error: json.message ?? "Could not generate a transfer account. Try again." };
-  }
-
-  const authorization = json.data?.meta?.authorization;
-  const accountNumber = authorization?.transfer_account;
-  const bankName = authorization?.transfer_bank;
-  if (!accountNumber || !bankName) {
-    console.error("Flutterwave bank transfer charge: unexpected response shape", JSON.stringify(json));
-    return { ok: false, error: "Could not generate a transfer account. Try again." };
-  }
-
-  return { ok: true, accountNumber, bankName };
 }
 
 /** Compares the `verif-hash` header against the dashboard-configured secret hash. */

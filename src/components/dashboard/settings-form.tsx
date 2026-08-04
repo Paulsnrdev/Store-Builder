@@ -29,7 +29,7 @@ type Initial = {
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
-  flutterwaveSubaccountId: string | null;
+  flutterwavePublicKey: string | null;
   isPublished: boolean;
   slug: string;
   niche: string;
@@ -164,9 +164,11 @@ export function SettingsForm({ initial, canCustomizeTheme = true }: { initial: I
       </fieldset>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Flutterwave subaccount ID</label>
-        <p className="mb-1 text-xs text-gray-400">From your Flutterwave dashboard — routes card payments directly to you.</p>
-        <Input name="flutterwaveSubaccountId" defaultValue={initial.flutterwaveSubaccountId ?? ""} placeholder="RS_xxxxxxxx" />
+        <label className="block text-sm font-medium text-gray-700">Flutterwave public key</label>
+        <p className="mb-1 text-xs text-gray-400">
+          From your Flutterwave dashboard → Settings → API Keys. Buyers pay you directly — StoreHike never touches your funds.
+        </p>
+        <Input name="flutterwavePublicKey" defaultValue={initial.flutterwavePublicKey ?? ""} placeholder="FLWPUBK_xxxxxxxx" />
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

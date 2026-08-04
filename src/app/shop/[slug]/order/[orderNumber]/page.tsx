@@ -12,7 +12,6 @@ const STATUS_MESSAGE: Record<string, string> = {
   DELIVERED: "Your order has been delivered.",
   CANCELLED: "This order was cancelled.",
   REFUNDED: "This order was refunded.",
-  EXPIRED: "This payment window expired — please place a new order.",
 };
 
 export default async function OrderConfirmationPage({
@@ -29,17 +28,10 @@ export default async function OrderConfirmationPage({
   });
   if (!order) notFound();
 
-  const hasDynamicAccount =
-    order.paymentMethod === "BANK_TRANSFER" && Boolean(order.bankTransferAccountNumber && order.bankTransferBankName);
-
   const bankInstructions =
-    order.paymentMethod !== "BANK_TRANSFER" || order.status !== "PENDING"
-      ? null
-      : hasDynamicAccount
-        ? `Transfer ₦${Number(order.total).toLocaleString()} to ${order.bankTransferBankName}, account number ${order.bankTransferAccountNumber}. This account is temporary — please pay before it expires below.`
-        : store.bankName && store.bankAccountNumber
-          ? `Transfer ₦${Number(order.total).toLocaleString()} to ${store.bankName}, account number ${store.bankAccountNumber} (${store.bankAccountName ?? store.name}).`
-          : null;
+    order.paymentMethod === "BANK_TRANSFER" && order.status === "PENDING" && store.bankName && store.bankAccountNumber
+      ? `Transfer ₦${Number(order.total).toLocaleString()} to ${store.bankName}, account number ${store.bankAccountNumber} (${store.bankAccountName ?? store.name}).`
+      : null;
 
   return (
     <div className="mx-auto max-w-md px-4 py-10 text-center">
@@ -47,13 +39,7 @@ export default async function OrderConfirmationPage({
       <h1 className="text-xl font-semibold text-gray-900">Order {order.orderNumber}</h1>
       <p className="mt-1 text-sm text-gray-500">{STATUS_MESSAGE[order.status] ?? order.status}</p>
 
-      {(order.paymentMethod === "FLUTTERWAVE" || hasDynamicAccount) && (
-        <PaymentStatusPoller
-          orderId={order.id}
-          initialStatus={order.status}
-          expiresAt={hasDynamicAccount ? order.bankTransferAccountExpiresAt : null}
-        />
-      )}
+      {order.paymentMethod === "FLUTTERWAVE" && <PaymentStatusPoller orderId={order.id} initialStatus={order.status} />}
 
       {bankInstructions && (
         <div className="mt-4 rounded-md bg-amber-50 p-3 text-left text-sm text-amber-800">{bankInstructions}</div>

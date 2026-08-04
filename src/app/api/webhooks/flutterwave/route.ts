@@ -2,12 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature, verifyTransaction, FLUTTERWAVE_TX_PREFIX } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
-import {
-  customerOrderPaidEmail,
-  sellerOrderPaidEmail,
-  sellerSubscriptionActiveEmail,
-  sellerSubscriptionPastDueEmail,
-} from "@/lib/email-templates";
+import { sellerSubscriptionActiveEmail, sellerSubscriptionPastDueEmail } from "@/lib/email-templates";
 import { addCycle, cycleAmount, type Cycle } from "@/lib/billing-cycles";
 
 export async function POST(req: Request) {
@@ -59,63 +54,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   }
 
-  const order = await prisma.order.findFirst({
-    where: { flutterwaveTxRef: txRef },
-    include: { items: true, store: true, customer: true },
-  });
-
-  if (!order) {
-    // Not one of our orders and not our own subscription tx_ref format — this is most
-    // likely a *recurring* auto-charge Flutterwave triggered on its own schedule for an
-    // existing subscription, using a tx_ref it generated itself that we don't control.
-    const handled = await handleRenewalCharge(event.data, transactionId);
-    if (!handled) console.error(`Flutterwave webhook: no order or subscription found for tx_ref ${txRef}`);
-    return NextResponse.json({ received: true });
-  }
-
-  // Idempotent: only the first delivery of this event (order still PENDING) has any effect.
-  // Replays of the same event find status already PAID and no-op.
-  if (order.status !== "PENDING") {
-    return NextResponse.json({ received: true });
-  }
-
-  // The verif-hash header proves the request came from Flutterwave but isn't a payload
-  // signature, so re-fetch the transaction from their API and confirm status/amount/
-  // currency/reference match this order before trusting it — see lib/flutterwave.ts.
-  const verified = await verifyTransaction(transactionId);
-  if (
-    !verified ||
-    verified.status !== "successful" ||
-    verified.txRef !== order.flutterwaveTxRef ||
-    verified.amount < Number(order.total) ||
-    verified.currency !== order.store.currency
-  ) {
-    console.error(`Flutterwave webhook: verification failed for order ${order.orderNumber}`);
-    return NextResponse.json({ received: true });
-  }
-
-  await prisma.order.update({ where: { id: order.id }, data: { status: "PAID", paidAt: new Date() } });
-
-  const emailData = {
-    storeName: order.store.name,
-    orderNumber: order.orderNumber,
-    customerName: order.customer.name,
-    total: Number(order.total),
-    items: order.items.map((i) => ({
-      productName: i.productName,
-      variantName: i.variantName,
-      quantity: i.quantity,
-      total: Number(i.total),
-    })),
-  };
-
-  if (order.store.email) {
-    await sendEmail({ to: order.store.email, ...sellerOrderPaidEmail(emailData) });
-  }
-  if (order.customer.email) {
-    await sendEmail({ to: order.customer.email, ...customerOrderPaidEmail(emailData), replyTo: order.store.email });
-  }
-
+  // Anything else at this point is a *recurring* auto-charge Flutterwave triggered on its
+  // own schedule for an existing subscription, using a tx_ref it generated itself that we
+  // don't control. Buyer orders no longer go through this webhook at all — each seller's
+  // own Flutterwave account handles and confirms those independently of the platform.
+  const handled = await handleRenewalCharge(event.data, transactionId);
+  if (!handled) console.error(`Flutterwave webhook: no subscription found for tx_ref ${txRef}`);
   return NextResponse.json({ received: true });
 }
 

@@ -21,9 +21,8 @@ Copy `.env.example` to `.env` and fill in real values. See "Accounts to create" 
 - `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_URL` — Auth.js + Google sign-in.
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — product images.
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — order emails. Without a verified sending domain, use the `onboarding@resend.dev` default.
-- `FLUTTERWAVE_SECRET_KEY` — checkout and subaccount splits (server-to-server only; the redirect-based flow used here needs no public/client key). `FLUTTERWAVE_SECRET_HASH` — a secret string you set yourself in the Flutterwave dashboard's webhook settings; the webhook handler checks the `verif-hash` header against it. Point a Flutterwave webhook at `/api/webhooks/flutterwave` (events: `charge.completed`).
+- `FLUTTERWAVE_SECRET_KEY` — StoreHike's own Flutterwave account, used only for its own subscription billing (never for buyer orders — those are charged directly against each seller's own Flutterwave account via a public key they add in store settings). `FLUTTERWAVE_SECRET_HASH` — a secret string you set yourself in the Flutterwave dashboard's webhook settings; the webhook handler checks the `verif-hash` header against it. Point a Flutterwave webhook at `/api/webhooks/flutterwave` (events: `charge.completed`, `subscription.cancelled`) on StoreHike's own account for subscription billing only.
 - `NEXT_PUBLIC_APP_URL` — the site's own base URL (e.g. `https://yourdomain.com` in production). Used to build Flutterwave redirect URLs and canonical/Open Graph URLs. Defaults to `http://localhost:3000` if unset.
-- `CRON_SECRET` — bearer token that authorizes `/api/cron/expire-orders` (releases stock reserved by auto bank-transfer orders whose payment window expired). Vercel Hobby only runs cron once a day, so this is called by the `.github/workflows/expire-orders.yml` scheduled workflow instead — set `CRON_SECRET` (same value as the deployed environment) and `APP_URL` (the deployed site's base URL) as GitHub repo secrets under Settings → Secrets and variables → Actions.
 
 ## Accounts to create
 

@@ -3,10 +3,12 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Script from "next/script";
 import { useCart } from "@/components/storefront/cart-context";
 import { NIGERIAN_STATES } from "@/lib/nigerian-states";
 import { previewDiscount } from "@/lib/actions/storefront";
 import { placeOrder } from "@/lib/actions/orders";
+import { confirmFlutterwavePayment } from "@/lib/actions/order-status";
 
 type Zone = { id: string; name: string; states: string[]; rate: number; freeAbove: number | null };
 
@@ -24,18 +26,23 @@ const PAYMENT_OPTIONS = [
 export function CheckoutForm({
   storeId,
   storeSlug,
+  storeName,
   zones,
   allowCardPayments,
+  flutterwavePublicKey,
 }: {
   storeId: string;
   storeSlug: string;
+  storeName: string;
   zones: Zone[];
   allowCardPayments: boolean;
+  flutterwavePublicKey: string | null;
 }) {
   const { items, subtotal, clear } = useCart();
   const router = useRouter();
 
-  const paymentOptions = allowCardPayments ? PAYMENT_OPTIONS : PAYMENT_OPTIONS.filter((o) => o.value !== "FLUTTERWAVE");
+  const canPayWithFlutterwave = allowCardPayments && Boolean(flutterwavePublicKey);
+  const paymentOptions = canPayWithFlutterwave ? PAYMENT_OPTIONS : PAYMENT_OPTIONS.filter((o) => o.value !== "FLUTTERWAVE");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -44,7 +51,7 @@ export function CheckoutForm({
   const [state, setState] = useState("");
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"FLUTTERWAVE" | "BANK_TRANSFER" | "CASH_ON_DELIVERY">(
-    allowCardPayments ? "FLUTTERWAVE" : "BANK_TRANSFER"
+    canPayWithFlutterwave ? "FLUTTERWAVE" : "BANK_TRANSFER"
   );
 
   const [discountCode, setDiscountCode] = useState("");
@@ -104,12 +111,30 @@ export function CheckoutForm({
         return;
       }
 
-      clear();
-      if (result.flutterwavePaymentLink) {
-        window.location.href = result.flutterwavePaymentLink;
-      } else {
-        router.push(`/shop/${storeSlug}/order/${result.orderNumber}`);
+      if (result.flutterwave && window.FlutterwaveCheckout) {
+        window.FlutterwaveCheckout({
+          public_key: result.flutterwave.publicKey,
+          tx_ref: result.flutterwave.txRef,
+          amount: result.flutterwave.amount,
+          currency: "NGN",
+          customer: { email: email || `${phone.replace(/[^\d]/g, "")}@guest.storehike.ng`, name, phonenumber: phone },
+          customizations: { title: storeName },
+          callback: (response) => {
+            if (response.status === "successful" || response.status === "completed") {
+              startPlacing(async () => {
+                await confirmFlutterwavePayment(result.orderId, String(response.transaction_id ?? response.tx_ref ?? result.flutterwave!.txRef));
+                clear();
+                router.push(`/shop/${storeSlug}/order/${result.orderNumber}`);
+              });
+            }
+          },
+          onclose: () => {},
+        });
+        return;
       }
+
+      clear();
+      router.push(`/shop/${storeSlug}/order/${result.orderNumber}`);
     });
   }
 
@@ -119,6 +144,7 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-5">
+      {canPayWithFlutterwave && <Script src="https://checkout.flutterwave.com/v3.0/inline.js" strategy="afterInteractive" />}
       <div className="flex gap-1.5 sm:hidden">
         <div className="h-1 flex-1 rounded-full bg-(--store-primary,#111827)" />
         <div className={`h-1 flex-1 rounded-full ${step === "payment" ? "bg-(--store-primary,#111827)" : "bg-gray-200"}`} />
