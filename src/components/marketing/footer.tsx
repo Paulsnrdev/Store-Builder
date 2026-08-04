@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/marketing/logo";
 
 const COLUMNS = [
   {
@@ -32,7 +33,7 @@ export function MarketingFooter() {
       <div className="mx-auto max-w-5xl">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
-            <span className="text-lg font-semibold text-gray-900">StoreHike</span>
+            <Logo />
             <p className="mt-2 text-sm text-gray-500">Hosted storefronts for Instagram &amp; WhatsApp sellers.</p>
           </div>
           {COLUMNS.map((col) => (

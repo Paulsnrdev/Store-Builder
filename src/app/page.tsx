@@ -33,7 +33,7 @@ const STEPS = [
 export default function MarketingHomePage() {
   return (
     <div className="flex flex-1 flex-col bg-white">
-      <header className="border-b border-gray-100 px-4 py-4">
+      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white px-4 py-4">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Logo />
           <nav className="flex items-center gap-4 text-sm font-medium">
