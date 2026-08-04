@@ -1,20 +1,39 @@
-// Deliberately plain, not "designed" — heavy styling (background blocks, big
-// buttons, logo headers) is exactly what mail providers' promotions filters
-// key on. Looking like an ordinary person-to-person email is what keeps
-// these landing in the primary inbox.
+// Restrained by design: mail providers' promotions filters key on the visual
+// patterns of marketing email — color-block banners, logo images, filled
+// "sale button" CTAs. This stays clean and legible (a real item table, a
+// light header rule, an outline-style link for the one primary action) while
+// avoiding every one of those triggers, so these keep landing in the primary
+// inbox instead of Promotions.
 
 const BRAND = "#059669";
+const TEXT = "#1f2937";
+const MUTED = "#6b7280";
+const BORDER = "#e5e7eb";
+const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
-function shell(bodyHtml: string): string {
-  return `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#1f2937;">${bodyHtml}</div>`;
+function shell(bodyHtml: string, headerLabel: string): string {
+  return `
+    <div style="font-family:${FONT};font-size:15px;line-height:1.6;color:${TEXT};max-width:520px;">
+      <p style="margin:0 0 16px;font-size:13px;font-weight:600;color:${MUTED};text-transform:uppercase;letter-spacing:0.03em;">${headerLabel}</p>
+      ${bodyHtml}
+      <p style="margin:28px 0 0;padding-top:16px;border-top:1px solid ${BORDER};font-size:12px;color:${MUTED};">
+        Sent by StoreHike.
+      </p>
+    </div>
+  `;
 }
 
 function paragraph(text: string): string {
-  return `<p style="margin:0 0 12px;">${text}</p>`;
+  return `<p style="margin:0 0 14px;">${text}</p>`;
 }
 
-function link(label: string, url: string): string {
-  return `<a href="${url}" style="color:${BRAND};">${label}</a>`;
+/** A single, restrained action — outlined rather than filled, so it reads as a link with structure, not a "sale" button. */
+function button(label: string, url: string): string {
+  return `
+    <p style="margin:20px 0;">
+      <a href="${url}" style="display:inline-block;padding:9px 18px;border:1px solid ${BRAND};border-radius:6px;color:${BRAND};text-decoration:none;font-weight:600;">${label}</a>
+    </p>
+  `;
 }
 
 type OrderEmailData = {
@@ -25,20 +44,39 @@ type OrderEmailData = {
   items: { productName: string; variantName: string | null; quantity: number; total: number }[];
 };
 
-function itemsList(items: OrderEmailData["items"]) {
+function itemsTable(items: OrderEmailData["items"], total: number) {
   const rows = items
-    .map((i) => `${i.productName}${i.variantName ? ` (${i.variantName})` : ""} x${i.quantity} — ₦${i.total.toLocaleString()}`)
-    .join("<br>");
-  return `<p style="margin:0 0 12px;">${rows}</p>`;
+    .map(
+      (i) => `
+        <tr>
+          <td style="padding:8px 0;border-bottom:1px solid ${BORDER};">
+            ${i.productName}${i.variantName ? `<br><span style="color:${MUTED};font-size:13px;">${i.variantName}</span>` : ""}
+          </td>
+          <td style="padding:8px 0;border-bottom:1px solid ${BORDER};text-align:center;color:${MUTED};">x${i.quantity}</td>
+          <td style="padding:8px 0;border-bottom:1px solid ${BORDER};text-align:right;white-space:nowrap;">₦${i.total.toLocaleString()}</td>
+        </tr>`
+    )
+    .join("");
+  return `
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+      ${rows}
+      <tr>
+        <td style="padding:10px 0 0;font-weight:700;" colspan="2">Total</td>
+        <td style="padding:10px 0 0;font-weight:700;text-align:right;white-space:nowrap;">₦${total.toLocaleString()}</td>
+      </tr>
+    </table>
+  `;
 }
 
 function orderEmail(intro: string, data: OrderEmailData, footer = "") {
-  return shell(`
-    ${paragraph(intro)}
-    ${itemsList(data.items)}
-    ${paragraph(`<strong>Total: ₦${data.total.toLocaleString()}</strong>`)}
-    ${footer}
-  `);
+  return shell(
+    `
+      ${paragraph(intro)}
+      ${itemsTable(data.items, data.total)}
+      ${footer}
+    `,
+    data.storeName
+  );
 }
 
 /** Bank transfer / cash on delivery: order placed but payment not yet confirmed. */
@@ -81,14 +119,17 @@ type SubscriptionEmailData = { storeName: string; planName: string };
 export function sellerSubscriptionActiveEmail(data: SubscriptionEmailData & { currentPeriodEnd: Date | null; billingUrl: string }) {
   return {
     subject: `You're on the ${data.planName} plan — StoreHike`,
-    html: shell(`
-      ${paragraph(
-        `Thanks for upgrading, ${data.storeName}. Your ${data.planName} plan is active${
-          data.currentPeriodEnd ? ` and renews on ${data.currentPeriodEnd.toLocaleDateString()}` : ""
-        }.`
-      )}
-      ${paragraph(link("View billing", data.billingUrl))}
-    `),
+    html: shell(
+      `
+        ${paragraph(
+          `Thanks for upgrading, ${data.storeName}. Your ${data.planName} plan is active${
+            data.currentPeriodEnd ? ` and renews on ${data.currentPeriodEnd.toLocaleDateString()}` : ""
+          }.`
+        )}
+        ${button("View billing", data.billingUrl)}
+      `,
+      "StoreHike"
+    ),
   };
 }
 
@@ -100,7 +141,8 @@ export function sellerSubscriptionCanceledEmail(data: SubscriptionEmailData & { 
         `Your ${data.planName} plan for ${data.storeName} has been canceled and won't renew.${
           data.accessUntil ? ` You'll keep your plan's features until ${data.accessUntil.toLocaleDateString()}.` : ""
         }`
-      )
+      ),
+      "StoreHike"
     ),
   };
 }
@@ -109,12 +151,15 @@ export function sellerSubscriptionCanceledEmail(data: SubscriptionEmailData & { 
 export function sellerSubscriptionPastDueEmail(data: SubscriptionEmailData & { billingUrl: string }) {
   return {
     subject: `Payment failed for your ${data.planName} plan — StoreHike`,
-    html: shell(`
-      ${paragraph(
-        `The card on file for ${data.storeName} was declined, so the ${data.planName} plan renewal failed. Your account has reverted to the Free plan's limits until this is resolved.`
-      )}
-      ${paragraph(link("Update billing", data.billingUrl))}
-    `),
+    html: shell(
+      `
+        ${paragraph(
+          `The card on file for ${data.storeName} was declined, so the ${data.planName} plan renewal failed. Your account has reverted to the Free plan's limits until this is resolved.`
+        )}
+        ${button("Update billing", data.billingUrl)}
+      `,
+      "StoreHike"
+    ),
   };
 }
 
@@ -122,22 +167,28 @@ export function sellerSubscriptionPastDueEmail(data: SubscriptionEmailData & { b
 export function welcomeSellerEmail(data: { storeName: string; name: string; dashboardUrl: string }) {
   return {
     subject: `Welcome to StoreHike, ${data.name}`,
-    html: shell(`
-      ${paragraph(`Hi ${data.name},`)}
-      ${paragraph(`${data.storeName} is set up and ready. Log in to add products, customize your storefront, and start taking orders.`)}
-      ${paragraph(link("Go to your dashboard", data.dashboardUrl))}
-    `),
+    html: shell(
+      `
+        ${paragraph(`Hi ${data.name},`)}
+        ${paragraph(`${data.storeName} is set up and ready. Log in to add products, customize your storefront, and start taking orders.`)}
+        ${button("Go to your dashboard", data.dashboardUrl)}
+      `,
+      "StoreHike"
+    ),
   };
 }
 
 export function passwordResetEmail(data: { resetUrl: string }) {
   return {
     subject: `Reset your StoreHike password`,
-    html: shell(`
-      ${paragraph("Click below to choose a new password. This link expires in 1 hour and can only be used once.")}
-      ${paragraph(link("Reset your password", data.resetUrl))}
-      ${paragraph(`If you didn't request this, you can ignore this email.`)}
-    `),
+    html: shell(
+      `
+        ${paragraph("Click below to choose a new password. This link expires in 1 hour and can only be used once.")}
+        ${button("Reset your password", data.resetUrl)}
+        ${paragraph(`If you didn't request this, you can ignore this email.`)}
+      `,
+      "StoreHike"
+    ),
   };
 }
 
@@ -178,9 +229,12 @@ export function customerOrderRefundedEmail(data: OrderEmailData) {
 export function staffInviteEmail(data: { storeName: string; acceptUrl: string }) {
   return {
     subject: `You've been invited to help manage ${data.storeName} on StoreHike`,
-    html: shell(`
-      ${paragraph(`You've been invited to help manage ${data.storeName}'s StoreHike dashboard. You'll need to sign in or create a free account first.`)}
-      ${paragraph(link("Accept invitation", data.acceptUrl))}
-    `),
+    html: shell(
+      `
+        ${paragraph(`You've been invited to help manage ${data.storeName}'s StoreHike dashboard. You'll need to sign in or create a free account first.`)}
+        ${button("Accept invitation", data.acceptUrl)}
+      `,
+      "StoreHike"
+    ),
   };
 }
