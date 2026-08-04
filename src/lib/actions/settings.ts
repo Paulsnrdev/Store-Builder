@@ -5,9 +5,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { hasFeature } from "@/lib/plan-features";
+import { NICHE_VALUES } from "@/lib/store-niches";
 
 const settingsSchema = z.object({
   name: z.string().min(1),
+  niche: z.enum(NICHE_VALUES),
   phone: z.string().nullable().optional(),
   whatsappNumber: z.string().nullable().optional(),
   email: z.string().email().nullable().or(z.literal("")).optional(),
@@ -37,6 +39,7 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
 
   const parsed = settingsSchema.safeParse({
     name: formData.get("name"),
+    niche: formData.get("niche"),
     phone: formData.get("phone") || null,
     whatsappNumber: formData.get("whatsappNumber") || null,
     email: formData.get("email") || null,
@@ -69,6 +72,7 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
     where: { id: store.id },
     data: {
       name: data.name,
+      niche: data.niche,
       phone: data.phone,
       whatsappNumber: data.whatsappNumber,
       email: data.email,

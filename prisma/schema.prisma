@@ -107,6 +107,7 @@ model Store {
   isSuspended             Boolean @default(false)
   suspendedAt             DateTime?
   suspendedReason         String?
+  niche                   StoreNiche @default(OTHER)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -124,6 +125,22 @@ model Store {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+enum StoreNiche {
+  FASHION_APPAREL
+  CLOTHING
+  BEAUTY_SKINCARE
+  ELECTRONICS_GADGETS
+  TECH
+  FOOD_GROCERIES
+  HOME_LIVING
+  KIDS_BABY
+  HEALTH_WELLNESS
+  BOOKS_STATIONERY
+  ARTS_CRAFTS
+  AUTOMOBILES
+  OTHER
 }
 
 model Category {

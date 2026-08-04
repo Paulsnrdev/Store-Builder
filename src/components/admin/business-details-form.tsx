@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { AdminFormState } from "@/lib/actions/admin-stores";
+import { STORE_NICHES } from "@/lib/store-niches";
 
 type Action = (prev: AdminFormState, formData: FormData) => Promise<AdminFormState>;
 
@@ -11,6 +12,7 @@ type Initial = {
   phone: string | null;
   address: string | null;
   description: string | null;
+  niche: string;
   isPublished: boolean;
 };
 
@@ -71,6 +73,21 @@ export function BusinessDetailsForm({ action, initial }: { action: Action; initi
           defaultValue={initial.address ?? ""}
           className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Niche</label>
+        <select
+          name="niche"
+          defaultValue={initial.niche}
+          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        >
+          {STORE_NICHES.map((n) => (
+            <option key={n.value} value={n.value}>
+              {n.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

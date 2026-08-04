@@ -140,6 +140,7 @@ async function logSubscriptionPaymentAndNotify(
         storeName: subscription.store.name,
         planName: subscription.plan.name,
         currentPeriodEnd: subscription.currentPeriodEnd,
+        billingUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/billing`,
       }),
     });
   }
@@ -262,7 +263,11 @@ async function handleFailedSubscriptionCharge(data: Record<string, unknown>, tra
   if (existing.store.email) {
     await sendEmail({
       to: existing.store.email,
-      ...sellerSubscriptionPastDueEmail({ storeName: existing.store.name, planName: existing.plan.name }),
+      ...sellerSubscriptionPastDueEmail({
+        storeName: existing.store.name,
+        planName: existing.plan.name,
+        billingUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/billing`,
+      }),
     });
   }
 }

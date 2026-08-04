@@ -23,6 +23,7 @@ export default async function SettingsPage() {
         <SettingsForm
           initial={{
             name: store.name,
+            niche: store.niche,
             phone: store.phone,
             whatsappNumber: store.whatsappNumber,
             email: store.email,

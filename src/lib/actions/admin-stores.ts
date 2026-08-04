@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
+import { NICHE_VALUES } from "@/lib/store-niches";
 
 export type AdminFormState = { error?: string; success?: boolean };
 
@@ -14,6 +15,7 @@ const storeDetailsSchema = z.object({
   phone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  niche: z.enum(NICHE_VALUES),
   isPublished: z.coerce.boolean().default(false),
 });
 
@@ -26,6 +28,7 @@ export async function updateStoreDetailsAdmin(storeId: string, _prev: AdminFormS
     phone: formData.get("phone") || null,
     address: formData.get("address") || null,
     description: formData.get("description") || null,
+    niche: formData.get("niche"),
     isPublished: formData.get("isPublished") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };

@@ -38,6 +38,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
               phone: store.phone,
               address: store.address,
               description: store.description,
+              niche: store.niche,
               isPublished: store.isPublished,
             }}
           />

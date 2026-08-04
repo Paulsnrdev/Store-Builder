@@ -10,6 +10,7 @@ import { signIn } from "@/auth";
 import { requireSession } from "@/lib/store";
 import { sendEmail } from "@/lib/email";
 import { welcomeSellerEmail, passwordResetEmail } from "@/lib/email-templates";
+import { NICHE_VALUES } from "@/lib/store-niches";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -18,6 +19,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   storeName: z.string().min(2),
+  niche: z.enum(NICHE_VALUES),
 });
 
 export type RegisterState = { error?: string };
@@ -28,13 +30,14 @@ export async function registerSeller(_prevState: RegisterState, formData: FormDa
     email: formData.get("email"),
     password: formData.get("password"),
     storeName: formData.get("storeName"),
+    niche: formData.get("niche"),
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  const { name, email, password, storeName } = parsed.data;
+  const { name, email, password, storeName, niche } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -58,18 +61,20 @@ export async function registerSeller(_prevState: RegisterState, formData: FormDa
           name: storeName,
           slug,
           currency: "NGN",
+          niche,
         },
       },
     },
   });
 
-  await sendEmail({ to: email, ...welcomeSellerEmail({ storeName, name }) });
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  await sendEmail({ to: email, ...welcomeSellerEmail({ storeName, name, dashboardUrl: `${appUrl}/dashboard` }) });
 
   await signIn("credentials", { email, password, redirectTo: "/dashboard" });
   return {};
 }
 
-const storeSetupSchema = z.object({ storeName: z.string().min(2) });
+const storeSetupSchema = z.object({ storeName: z.string().min(2), niche: z.enum(NICHE_VALUES) });
 
 /**
  * For a user who's already authenticated (e.g. just signed in with Google for the
@@ -79,7 +84,7 @@ const storeSetupSchema = z.object({ storeName: z.string().min(2) });
 export async function completeStoreSetup(_prevState: RegisterState, formData: FormData): Promise<RegisterState> {
   const session = await requireSession();
 
-  const parsed = storeSetupSchema.safeParse({ storeName: formData.get("storeName") });
+  const parsed = storeSetupSchema.safeParse({ storeName: formData.get("storeName"), niche: formData.get("niche") });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
@@ -93,13 +98,14 @@ export async function completeStoreSetup(_prevState: RegisterState, formData: Fo
   }
 
   await prisma.store.create({
-    data: { userId: session.user.id, name: parsed.data.storeName, slug, currency: "NGN" },
+    data: { userId: session.user.id, name: parsed.data.storeName, slug, currency: "NGN", niche: parsed.data.niche },
   });
 
   if (session.user.email) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     await sendEmail({
       to: session.user.email,
-      ...welcomeSellerEmail({ storeName: parsed.data.storeName, name: session.user.name || "there" }),
+      ...welcomeSellerEmail({ storeName: parsed.data.storeName, name: session.user.name || "there", dashboardUrl: `${appUrl}/dashboard` }),
     });
   }
 

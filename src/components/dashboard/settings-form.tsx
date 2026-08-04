@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { STORE_NICHES } from "@/lib/store-niches";
 
 type Initial = {
   name: string;
@@ -31,6 +32,7 @@ type Initial = {
   flutterwaveSubaccountId: string | null;
   isPublished: boolean;
   slug: string;
+  niche: string;
 };
 
 const initialState: SettingsFormState = {};
@@ -55,6 +57,18 @@ export function SettingsForm({ initial, canCustomizeTheme = true }: { initial: I
       <div>
         <label className="block text-sm font-medium text-gray-700">Store name</label>
         <Input name="name" defaultValue={initial.name} required className="mt-1" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">What do you sell?</label>
+        <p className="mb-1 text-xs text-gray-400">Determines which marketplace niche your store is listed under.</p>
+        <Select name="niche" defaultValue={initial.niche} className="mt-1">
+          {STORE_NICHES.map((n) => (
+            <option key={n.value} value={n.value}>
+              {n.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <div>
