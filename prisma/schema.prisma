@@ -366,6 +366,11 @@ model Plan {
   // no Subscription row at all (the default for new signups) fall back to the
   // hardcoded FREE_PRODUCT_LIMIT in src/lib/plan-limits.ts, not a DB row here.
   productLimit Int?
+  // Which tier of gated features this plan unlocks — see FEATURE_TIER in
+  // src/lib/plan-features.ts for what each level requires. 0 = Free-equivalent.
+  // An explicit admin-set number rather than inferring from the plan's slug/name,
+  // so renaming a plan later can't silently change what it unlocks.
+  featureTier  Int      @default(0)
   isActive     Boolean  @default(true)
   sortOrder    Int      @default(0)
 

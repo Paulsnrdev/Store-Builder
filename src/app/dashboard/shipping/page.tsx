@@ -6,17 +6,27 @@ import { DeleteButton } from "@/components/dashboard/delete-button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/table";
+import { hasFeature } from "@/lib/plan-features";
 
 export default async function ShippingPage() {
   const store = await getCurrentStore();
   const zones = await prisma.shippingZone.findMany({ where: { storeId: store.id }, orderBy: { name: "asc" } });
+  const canCreateZones = hasFeature(store.subscription, "SHIPPING_ZONES");
 
   return (
     <div>
       <PageHeader
         title="Shipping zones"
         description="Shipping cost at checkout is picked by matching the buyer's state to a zone. A state not covered by any zone ships free."
-        action={<Button href="/dashboard/shipping/new">New zone</Button>}
+        action={
+          canCreateZones ? (
+            <Button href="/dashboard/shipping/new">New zone</Button>
+          ) : (
+            <Button href="/dashboard/billing" variant="secondary">
+              Upgrade to add zones
+            </Button>
+          )
+        }
       />
 
       <TableShell className="mt-6">

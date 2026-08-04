@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { toCsv } from "@/lib/csv";
+import { hasFeature } from "@/lib/plan-features";
 
 const HEADERS = [
   "name",
@@ -19,6 +20,10 @@ const HEADERS = [
 
 export async function GET() {
   const store = await getCurrentStore();
+  if (!hasFeature(store.subscription, "CSV_EXPORT")) {
+    return new Response("CSV export is available on the Growth plan and above.", { status: 403 });
+  }
+
   const products = await prisma.product.findMany({
     where: { storeId: store.id },
     include: { category: true },

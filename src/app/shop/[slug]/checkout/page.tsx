@@ -1,6 +1,7 @@
 import { getPublishedStore } from "@/lib/storefront";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/storefront/checkout-form";
+import { hasFeature } from "@/lib/plan-features";
 
 export default async function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -14,6 +15,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
       <CheckoutForm
         storeId={store.id}
         storeSlug={store.slug}
+        allowCardPayments={hasFeature(store.subscription, "CARD_PAYMENTS")}
         zones={zones.map((z) => ({
           id: z.id,
           name: z.name,

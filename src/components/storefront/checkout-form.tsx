@@ -21,9 +21,21 @@ const PAYMENT_OPTIONS = [
   { value: "CASH_ON_DELIVERY", label: "Cash on delivery", hint: "Pay when your order arrives" },
 ] as const;
 
-export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; storeSlug: string; zones: Zone[] }) {
+export function CheckoutForm({
+  storeId,
+  storeSlug,
+  zones,
+  allowCardPayments,
+}: {
+  storeId: string;
+  storeSlug: string;
+  zones: Zone[];
+  allowCardPayments: boolean;
+}) {
   const { items, subtotal, clear } = useCart();
   const router = useRouter();
+
+  const paymentOptions = allowCardPayments ? PAYMENT_OPTIONS : PAYMENT_OPTIONS.filter((o) => o.value !== "FLUTTERWAVE");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -31,7 +43,9 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
   const [address, setAddress] = useState("");
   const [state, setState] = useState("");
   const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"FLUTTERWAVE" | "BANK_TRANSFER" | "CASH_ON_DELIVERY">("FLUTTERWAVE");
+  const [paymentMethod, setPaymentMethod] = useState<"FLUTTERWAVE" | "BANK_TRANSFER" | "CASH_ON_DELIVERY">(
+    allowCardPayments ? "FLUTTERWAVE" : "BANK_TRANSFER"
+  );
 
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState<{ code: string; amount: number } | null>(null);
@@ -192,7 +206,7 @@ export function CheckoutForm({ storeId, storeSlug, zones }: { storeId: string; s
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <h2 className="text-base font-semibold text-gray-900">Payment method</h2>
               <div className="mt-3 space-y-2.5">
-                {PAYMENT_OPTIONS.map((opt) => (
+                {paymentOptions.map((opt) => (
                   <label
                     key={opt.value}
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 px-3.5 py-3 text-sm transition-colors ${

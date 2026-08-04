@@ -9,10 +9,14 @@ import { OrderTimeline } from "@/components/dashboard/order-timeline";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { hasFeature } from "@/lib/plan-features";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const store = await getCurrentStore();
   const { id } = await params;
+
+  const canMessageWhatsApp = hasFeature(store.subscription, "WHATSAPP_MESSAGING");
+  const canPrintInvoice = hasFeature(store.subscription, "PRINTABLE_INVOICES");
 
   const order = await prisma.order.findFirst({
     where: { id, storeId: store.id },
@@ -33,9 +37,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge tone={`${orderStatusClass[order.status]} px-3 py-1 text-sm`}>{orderStatusLabel[order.status]}</StatusBadge>
-          <Button href={`/dashboard/orders/${order.id}/print`} target="_blank" variant="secondary" size="sm">
-            Print invoice
-          </Button>
+          {canPrintInvoice && (
+            <Button href={`/dashboard/orders/${order.id}/print`} target="_blank" variant="secondary" size="sm">
+              Print invoice
+            </Button>
+          )}
         </div>
       </div>
 
@@ -45,14 +51,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <p className="mt-2 text-sm text-gray-700">{order.customer.name}</p>
           <p className="text-sm text-gray-500">{order.customer.phone}</p>
           {order.customer.email && <p className="text-sm text-gray-500">{order.customer.email}</p>}
-          <Link
-            href={whatsappLink(order.customer.phone, `Hi ${order.customer.name}, this is regarding your order ${order.orderNumber} (status: ${orderStatusLabel[order.status]}).`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-block rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white"
-          >
-            Message on WhatsApp
-          </Link>
+          {canMessageWhatsApp && (
+            <Link
+              href={whatsappLink(order.customer.phone, `Hi ${order.customer.name}, this is regarding your order ${order.orderNumber} (status: ${orderStatusLabel[order.status]}).`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-block rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white"
+            >
+              Message on WhatsApp
+            </Link>
+          )}
         </Card>
 
         <Card>

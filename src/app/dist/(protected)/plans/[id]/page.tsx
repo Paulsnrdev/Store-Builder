@@ -21,6 +21,7 @@ export default async function EditPlanPage({ params }: { params: Promise<{ id: s
             yearlyPrice: plan.yearlyPrice.toString(),
             currency: plan.currency,
             productLimit: plan.productLimit,
+            featureTier: plan.featureTier,
             isActive: plan.isActive,
             sortOrder: plan.sortOrder,
           }}

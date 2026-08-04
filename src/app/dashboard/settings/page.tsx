@@ -3,6 +3,7 @@ import { SettingsForm } from "@/components/dashboard/settings-form";
 import { ChangePasswordForm } from "@/components/dashboard/change-password-form";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
+import { hasFeature } from "@/lib/plan-features";
 
 export default async function SettingsPage() {
   const store = await getCurrentStore();
@@ -44,6 +45,7 @@ export default async function SettingsPage() {
             isPublished: store.isPublished,
             slug: store.slug,
           }}
+          canCustomizeTheme={hasFeature(store.subscription, "THEME_CUSTOMIZATION")}
         />
       </div>
 

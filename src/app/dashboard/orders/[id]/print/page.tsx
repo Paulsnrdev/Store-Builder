@@ -3,10 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { paymentMethodLabel } from "@/lib/order-status-display";
 import { PrintButton } from "@/components/dashboard/print-button";
+import { hasFeature } from "@/lib/plan-features";
 
 export default async function OrderPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const store = await getCurrentStore();
   const { id } = await params;
+
+  if (!hasFeature(store.subscription, "PRINTABLE_INVOICES")) notFound();
 
   const order = await prisma.order.findFirst({
     where: { id, storeId: store.id },

@@ -32,10 +32,12 @@ export function ProductForm({
   action,
   categories,
   initial,
+  canUseVariants = true,
 }: {
   action: Action;
   categories: { id: string; name: string }[];
   initial?: ProductInitial;
+  canUseVariants?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const [images, setImages] = useState<ProductImageItem[]>(initial?.images ?? []);
@@ -136,12 +138,24 @@ export function ProductForm({
 
       <div>
         <h3 className="text-sm font-medium text-gray-700">Variants</h3>
-        <p className="mb-2 text-xs text-gray-400">
-          Optional. Define options like Size and Colour to sell this product in multiple combinations.
-        </p>
-        <VariantEditor initialVariants={variants} basePrice={price} onChange={setVariants} />
+        {canUseVariants ? (
+          <>
+            <p className="mb-2 text-xs text-gray-400">
+              Optional. Define options like Size and Colour to sell this product in multiple combinations.
+            </p>
+            <VariantEditor initialVariants={variants} basePrice={price} onChange={setVariants} />
+          </>
+        ) : (
+          <p className="mt-1 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
+            Product variants are available on the Basic plan and above.{" "}
+            <a href="/dashboard/billing" className="font-medium text-brand-600 hover:underline">
+              Upgrade
+            </a>{" "}
+            to add sizes, colours, and more.
+          </p>
+        )}
       </div>
-      <input type="hidden" name="variants" value={JSON.stringify(variants)} />
+      <input type="hidden" name="variants" value={JSON.stringify(canUseVariants ? variants : [])} />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 

@@ -377,16 +377,16 @@ async function main() {
   // a store with no Subscription at all is treated as Free by default; see
   // FREE_PRODUCT_LIMIT in src/lib/plan-limits.ts.
   const paidPlans = [
-    { name: "Lite", slug: "lite", monthlyPrice: 3900, productLimit: 20, sortOrder: 1 },
-    { name: "Basic", slug: "basic", monthlyPrice: 5200, productLimit: 100, sortOrder: 2 },
-    { name: "Growth", slug: "growth", monthlyPrice: 7600, productLimit: 1000, sortOrder: 3 },
-    { name: "Business", slug: "business", monthlyPrice: 11000, productLimit: null, sortOrder: 4 },
+    { name: "Lite", slug: "lite", monthlyPrice: 3900, productLimit: 20, featureTier: 1, sortOrder: 1 },
+    { name: "Basic", slug: "basic", monthlyPrice: 5200, productLimit: 100, featureTier: 2, sortOrder: 2 },
+    { name: "Growth", slug: "growth", monthlyPrice: 7600, productLimit: 1000, featureTier: 3, sortOrder: 3 },
+    { name: "Business", slug: "business", monthlyPrice: 11000, productLimit: null, featureTier: 4, sortOrder: 4 },
   ];
 
   for (const p of paidPlans) {
     await prisma.plan.upsert({
       where: { slug: p.slug },
-      update: {},
+      update: { featureTier: p.featureTier },
       create: {
         name: p.name,
         slug: p.slug,
@@ -394,6 +394,7 @@ async function main() {
         yearlyPrice: p.monthlyPrice * 12 * 0.8, // matches the 20% annual discount shown on the pricing page
         currency: "NGN",
         productLimit: p.productLimit,
+        featureTier: p.featureTier,
         sortOrder: p.sortOrder,
       },
     });

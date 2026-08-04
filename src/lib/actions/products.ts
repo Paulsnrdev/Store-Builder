@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { slugify } from "@/lib/slugify";
 import { getProductLimit } from "@/lib/plan-limits";
+import { hasFeature } from "@/lib/plan-features";
 
 const variantSchema = z.object({
   name: z.string().min(1),
@@ -99,6 +100,10 @@ export async function createProduct(_prev: ProductFormState, formData: FormData)
     }
   }
 
+  if (data.variants.length > 0 && !hasFeature(store.subscription, "PRODUCT_VARIANTS")) {
+    return { error: "Product variants are available on the Basic plan and above. Upgrade to add them." };
+  }
+
   const slug = await uniqueProductSlug(store.id, data.name);
   const sku = await uniqueProductSku(store.id, data.sku);
   if (data.sku && !sku) return { error: "That SKU is already in use." };
@@ -138,12 +143,19 @@ export async function createProduct(_prev: ProductFormState, formData: FormData)
 
 export async function updateProduct(id: string, _prev: ProductFormState, formData: FormData): Promise<ProductFormState> {
   const store = await getCurrentStore();
-  const existing = await prisma.product.findFirst({ where: { id, storeId: store.id } });
+  const existing = await prisma.product.findFirst({ where: { id, storeId: store.id }, include: { variants: true } });
   if (!existing) return { error: "Product not found." };
 
   const parsed = parseProductForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   const data = parsed.data;
+
+  // Grandfathered: a product that already has variants can keep them even on a plan below
+  // Basic, but a product with none can't gain new ones without the feature.
+  const canUseVariants = hasFeature(store.subscription, "PRODUCT_VARIANTS") || existing.variants.length > 0;
+  if (data.variants.length > 0 && !canUseVariants) {
+    return { error: "Product variants are available on the Basic plan and above. Upgrade to add them." };
+  }
 
   const slug = existing.name === data.name ? existing.slug : await uniqueProductSlug(store.id, data.name, id);
   const sku = await uniqueProductSku(store.id, data.sku, id);

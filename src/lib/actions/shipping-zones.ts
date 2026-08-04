@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { NIGERIAN_STATES } from "@/lib/nigerian-states";
+import { hasFeature } from "@/lib/plan-features";
 
 const zoneSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -27,6 +28,10 @@ export type ShippingZoneFormState = { error?: string };
 
 export async function createShippingZone(_prev: ShippingZoneFormState, formData: FormData): Promise<ShippingZoneFormState> {
   const store = await getCurrentStore();
+  if (!hasFeature(store.subscription, "SHIPPING_ZONES")) {
+    return { error: "Custom shipping zones are available on the Basic plan and above. Upgrade to add one." };
+  }
+
   const parsed = parseZoneForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 

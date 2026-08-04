@@ -16,6 +16,7 @@ const planSchema = z.object({
   yearlyPrice: z.coerce.number().min(0),
   currency: z.string().min(1).default("NGN"),
   productLimit: z.coerce.number().int().positive().nullable().optional(),
+  featureTier: z.coerce.number().int().min(0).default(0),
   isActive: z.coerce.boolean().default(true),
   sortOrder: z.coerce.number().int().default(0),
 });
@@ -29,6 +30,7 @@ function parsePlanForm(formData: FormData) {
     yearlyPrice: formData.get("yearlyPrice"),
     currency: formData.get("currency") || "NGN",
     productLimit: productLimitRaw ? productLimitRaw : null,
+    featureTier: formData.get("featureTier") ?? 0,
     isActive: formData.get("isActive") === "on",
     sortOrder: formData.get("sortOrder") ?? 0,
   });

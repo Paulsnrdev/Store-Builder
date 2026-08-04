@@ -35,7 +35,7 @@ type Initial = {
 
 const initialState: SettingsFormState = {};
 
-export function SettingsForm({ initial }: { initial: Initial }) {
+export function SettingsForm({ initial, canCustomizeTheme = true }: { initial: Initial; canCustomizeTheme?: boolean }) {
   const [state, formAction, pending] = useActionState(updateStoreSettings, initialState);
   const [logoUrl, setLogoUrl] = useState(initial.logoUrl);
   const [bannerUrl, setBannerUrl] = useState(initial.bannerUrl);
@@ -101,10 +101,18 @@ export function SettingsForm({ initial }: { initial: Initial }) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Font</label>
-            <Select name="themeFont" defaultValue={initial.themeFont ?? "sans"} className="mt-1">
+            <Select name="themeFont" defaultValue={initial.themeFont ?? "sans"} disabled={!canCustomizeTheme} className="mt-1">
               <option value="sans">Sans-serif</option>
               <option value="serif">Serif</option>
             </Select>
+            {!canCustomizeTheme && (
+              <p className="mt-1 text-xs text-gray-400">
+                Font choice is available on the Basic plan and above.{" "}
+                <a href="/dashboard/billing" className="font-medium text-brand-600 hover:underline">
+                  Upgrade
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </fieldset>

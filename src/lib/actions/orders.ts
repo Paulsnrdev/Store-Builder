@@ -8,6 +8,7 @@ import { randomOrderNumber } from "@/lib/order-number";
 import { initializeTransaction, FLUTTERWAVE_TX_PREFIX } from "@/lib/flutterwave";
 import { sendEmail } from "@/lib/email";
 import { customerOrderPendingEmail, sellerOrderPendingEmail } from "@/lib/email-templates";
+import { hasFeature } from "@/lib/plan-features";
 
 type PlaceOrderInput = {
   storeId: string;
@@ -22,8 +23,15 @@ type PlaceOrderInput = {
 type PlaceOrderResult = { ok: true; orderNumber: string; flutterwavePaymentLink?: string } | { ok: false; error: string };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
-  const store = await prisma.store.findFirst({ where: { id: input.storeId, isPublished: true, isSuspended: false } });
+  const store = await prisma.store.findFirst({
+    where: { id: input.storeId, isPublished: true, isSuspended: false },
+    include: { subscription: { include: { plan: true } } },
+  });
   if (!store) return { ok: false, error: "Store not found." };
+
+  if (input.paymentMethod === "FLUTTERWAVE" && !hasFeature(store.subscription, "CARD_PAYMENTS")) {
+    return { ok: false, error: "Card payments aren't available for this store yet." };
+  }
 
   if (!input.customer.name.trim() || !input.customer.phone.trim()) {
     return { ok: false, error: "Name and phone are required." };

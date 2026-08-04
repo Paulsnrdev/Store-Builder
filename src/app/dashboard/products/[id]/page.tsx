@@ -4,6 +4,7 @@ import { getCurrentStore } from "@/lib/store";
 import { ProductForm, type ProductInitial } from "@/components/dashboard/product-form";
 import { updateProduct } from "@/lib/actions/products";
 import { PageHeader } from "@/components/ui/page-header";
+import { hasFeature } from "@/lib/plan-features";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -40,11 +41,20 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     })),
   };
 
+  // Grandfathered: a product that already has variants keeps the full editor even if the
+  // store has since dropped to a plan below Basic, so downgrading never silently strips data.
+  const canUseVariants = hasFeature(store.subscription, "PRODUCT_VARIANTS") || product.variants.length > 0;
+
   return (
     <div>
       <PageHeader title="Edit product" />
       <div className="mt-6">
-        <ProductForm action={updateProduct.bind(null, product.id)} categories={categories} initial={initial} />
+        <ProductForm
+          action={updateProduct.bind(null, product.id)}
+          categories={categories}
+          initial={initial}
+          canUseVariants={canUseVariants}
+        />
       </div>
     </div>
   );

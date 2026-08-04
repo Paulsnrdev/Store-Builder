@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
+import { hasFeature } from "@/lib/plan-features";
 
 const settingsSchema = z.object({
   name: z.string().min(1),
@@ -60,6 +61,10 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   const data = parsed.data;
 
+  // Font choice is a Basic+ feature (accent color stays available on every plan) — silently
+  // clamp rather than error, so a gated field doesn't block saving the rest of this form.
+  const themeFont = hasFeature(store.subscription, "THEME_CUSTOMIZATION") ? data.themeFont : "sans";
+
   await prisma.store.update({
     where: { id: store.id },
     data: {
@@ -71,7 +76,7 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
       description: data.description,
       logoUrl: data.logoUrl,
       bannerUrl: data.bannerUrl,
-      theme: { color: data.themeColor || undefined, font: data.themeFont || undefined },
+      theme: { color: data.themeColor || undefined, font: themeFont || undefined },
       socialLinks: {
         instagram: data.socialInstagram || undefined,
         facebook: data.socialFacebook || undefined,

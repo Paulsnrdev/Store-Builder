@@ -12,6 +12,7 @@ type Initial = {
   yearlyPrice: string;
   currency: string;
   productLimit: number | null;
+  featureTier: number;
   isActive: boolean;
   sortOrder: number;
 };
@@ -101,6 +102,24 @@ export function PlanForm({ action, initial }: { action: Action; initial?: Initia
           className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
         <p className="mt-1 text-xs text-gray-500">Max products a store on this plan can have. Blank = unlimited.</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Feature tier</label>
+        <select
+          name="featureTier"
+          defaultValue={initial?.featureTier ?? 0}
+          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        >
+          <option value={0}>0 — Free (no gated features)</option>
+          <option value={1}>1 — Lite (card payments, WhatsApp messaging)</option>
+          <option value={2}>2 — Basic (+ variants, theme font, invoices, shipping zones)</option>
+          <option value={3}>3 — Growth (+ CSV export, cart sync)</option>
+          <option value={4}>4 — Business</option>
+        </select>
+        <p className="mt-1 text-xs text-gray-500">
+          Which gated features this plan unlocks — see FEATURE_TIER in src/lib/plan-features.ts.
+        </p>
       </div>
 
       <label className="flex items-center gap-2 rounded-md border border-gray-200 p-3 text-sm">
