@@ -132,7 +132,7 @@ export function CheckoutForm({
               <div className="mt-3 grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Full name</label>
-                  <input required placeholder="e.g. Segun Ajayi" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+                  <input required placeholder="e.g. Wall Mart" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Phone (WhatsApp)</label>
