@@ -113,7 +113,7 @@ export async function POST(req: Request) {
     await sendEmail({ to: order.store.email, ...sellerOrderPaidEmail(emailData) });
   }
   if (order.customer.email) {
-    await sendEmail({ to: order.customer.email, ...customerOrderPaidEmail(emailData) });
+    await sendEmail({ to: order.customer.email, ...customerOrderPaidEmail(emailData), replyTo: order.store.email });
   }
 
   return NextResponse.json({ received: true });

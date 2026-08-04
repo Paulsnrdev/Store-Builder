@@ -79,6 +79,7 @@ export async function markOrderShipped(orderId: string, trackingNote?: string): 
     await sendEmail({
       to: order.customer.email,
       ...customerOrderShippedEmail({ ...orderEmailData(order), trackingNote }),
+      replyTo: order.store.email,
     });
   }
   revalidateOrder(orderId);
@@ -93,7 +94,7 @@ export async function markOrderDelivered(orderId: string): Promise<ActionResult>
 
   await prisma.order.update({ where: { id: order.id }, data: { status: "DELIVERED", deliveredAt: new Date() } });
   if (order.customer.email) {
-    await sendEmail({ to: order.customer.email, ...customerOrderDeliveredEmail(orderEmailData(order)) });
+    await sendEmail({ to: order.customer.email, ...customerOrderDeliveredEmail(orderEmailData(order)), replyTo: order.store.email });
   }
   revalidateOrder(orderId);
   return { ok: true };
@@ -113,7 +114,7 @@ export async function cancelOrder(orderId: string): Promise<ActionResult> {
     await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } });
   });
   if (order.customer.email) {
-    await sendEmail({ to: order.customer.email, ...customerOrderCancelledEmail(orderEmailData(order)) });
+    await sendEmail({ to: order.customer.email, ...customerOrderCancelledEmail(orderEmailData(order)), replyTo: order.store.email });
   }
   revalidateOrder(orderId);
   return { ok: true };
@@ -133,7 +134,7 @@ export async function refundOrder(orderId: string): Promise<ActionResult> {
     await tx.order.update({ where: { id: order.id }, data: { status: "REFUNDED" } });
   });
   if (order.customer.email) {
-    await sendEmail({ to: order.customer.email, ...customerOrderRefundedEmail(orderEmailData(order)) });
+    await sendEmail({ to: order.customer.email, ...customerOrderRefundedEmail(orderEmailData(order)), replyTo: order.store.email });
   }
   revalidateOrder(orderId);
   return { ok: true };

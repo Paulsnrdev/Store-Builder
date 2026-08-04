@@ -188,7 +188,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       await sendEmail({ to: store.email, ...sellerOrderPendingEmail(emailData, paymentMethodLabel) });
     }
     if (input.customer.email) {
-      await sendEmail({ to: input.customer.email, ...customerOrderPendingEmail(emailData, paymentInstructions) });
+      await sendEmail({ to: input.customer.email, ...customerOrderPendingEmail(emailData, paymentInstructions), replyTo: store.email });
     }
 
     return { ok: true, orderNumber: order.orderNumber };
