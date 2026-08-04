@@ -58,6 +58,9 @@ export function CheckoutForm({
   const [step, setStep] = useState<"details" | "payment">("details");
 
   const zone = useMemo(() => zones.find((z) => z.states.includes(state)), [zones, state]);
+  // No state picked yet, or the seller hasn't set up a shipping zone covering the picked
+  // state — the total below is product cost only, not a final delivery-inclusive price.
+  const shippingUnset = !zone;
   const shippingCost = zone ? (zone.freeAbove !== null && subtotal >= zone.freeAbove ? 0 : zone.rate) : 0;
   const discountAmount = discount?.amount ?? 0;
   const total = Math.max(subtotal + shippingCost - discountAmount, 0);
@@ -278,7 +281,9 @@ export function CheckoutForm({
             </div>
             <div className="flex justify-between text-gray-600">
               <span>Shipping{zone ? ` (${zone.name})` : ""}</span>
-              <span>{state ? (shippingCost > 0 ? `₦${shippingCost.toLocaleString()}` : "Free") : "—"}</span>
+              <span>
+                {!state ? "—" : zone ? (shippingCost > 0 ? `₦${shippingCost.toLocaleString()}` : "Free") : "Not set yet"}
+              </span>
             </div>
             {discount && (
               <div className="flex justify-between text-gray-600">
@@ -286,9 +291,12 @@ export function CheckoutForm({
                 <span>−₦{discountAmount.toLocaleString()}</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-gray-200 pt-1.5 text-base font-semibold text-gray-900">
+            <div className="flex items-baseline justify-between border-t border-gray-200 pt-1.5 text-base font-semibold text-gray-900">
               <span>Total</span>
-              <span>₦{total.toLocaleString()}</span>
+              <span>
+                ₦{total.toLocaleString()}
+                {shippingUnset && <span className="ml-1 text-xs font-normal text-gray-400">(excl. delivery fee)</span>}
+              </span>
             </div>
           </div>
 
