@@ -78,17 +78,15 @@ export function Sidebar({ storeName, planName, isOwner }: { storeName: string; p
   return (
     <>
       {/* Desktop/tablet sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white sm:flex sm:flex-col sm:justify-between sm:p-4 print:hidden">
-        <div>
-          <div className="mb-1 px-2 text-lg font-bold tracking-tight text-gray-900">{storeName}</div>
-          <div className="mb-6 px-2">
-            <PlanBadge planName={planName} isOwner={isOwner} />
-          </div>
-          <NavLinks pathname={pathname} isOwner={isOwner} />
+      <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white sm:flex sm:flex-col sm:p-4 print:hidden">
+        <div className="mb-1 px-2 text-lg font-bold tracking-tight text-gray-900">{storeName}</div>
+        <div className="mb-6 px-2">
+          <PlanBadge planName={planName} isOwner={isOwner} />
         </div>
+        <NavLinks pathname={pathname} isOwner={isOwner} />
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100"
+          className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100"
         >
           <LogOut className="h-4 w-4" />
           Sign out
