@@ -11,6 +11,7 @@ import { requireSession } from "@/lib/store";
 import { sendEmail } from "@/lib/email";
 import { welcomeSellerEmail, passwordResetEmail } from "@/lib/email-templates";
 import { NICHE_VALUES } from "@/lib/store-niches";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -35,6 +36,10 @@ export async function registerSeller(_prevState: RegisterState, formData: FormDa
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+
+  if (!(await checkRateLimit("register", await clientIp()))) {
+    return { error: "Too many attempts. Try again later." };
   }
 
   const { name, email, password, storeName, niche } = parsed.data;
@@ -124,10 +129,14 @@ export async function requestPasswordReset(
   if (!parsed.success) return { error: "Enter a valid email address." };
 
   const { email } = parsed.data;
-  const user = await prisma.user.findUnique({ where: { email } });
 
-  // Same response whether or not the account exists, so this can't be used to check
-  // which emails are registered.
+  // Same response whether rate-limited, missing, or found, so this can't be used to check
+  // which emails are registered or to spam a victim's inbox with reset links.
+  if (!(await checkRateLimit("passwordReset", email.toLowerCase()))) {
+    return { submitted: true };
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
   if (user) {
     const token = crypto.randomBytes(32).toString("hex");
     await prisma.verificationToken.deleteMany({ where: { identifier: email } });
