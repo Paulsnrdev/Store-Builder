@@ -8,6 +8,9 @@ import { randomOrderNumber } from "@/lib/order-number";
 import { sendEmail } from "@/lib/email";
 import { customerOrderPendingEmail, sellerOrderPendingEmail } from "@/lib/email-templates";
 import { hasFeature } from "@/lib/plan-features";
+import { createOrderVirtualAccount } from "@/lib/paystack";
+
+const DVA_EXPIRY_MINUTES = 30;
 
 type PlaceOrderInput = {
   storeId: string;
@@ -20,7 +23,13 @@ type PlaceOrderInput = {
 };
 
 type PlaceOrderResult =
-  | { ok: true; orderId: string; orderNumber: string; paystack?: { publicKey: string; amount: number; reference: string } }
+  | {
+      ok: true;
+      orderId: string;
+      orderNumber: string;
+      paystack?: { publicKey: string; amount: number; reference: string };
+      bankTransfer?: { accountNumber: string; bankName: string; amount: number; expiresAt: string };
+    }
   | { ok: false; error: string };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
@@ -149,6 +158,42 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         orderNumber: order.orderNumber,
         paystack: { publicKey: store.paystackPublicKey!, amount: total, reference: order.orderNumber },
       };
+    }
+
+    // Pooled bank transfer: the seller has no Paystack account of their own, so a fresh
+    // Dedicated Virtual Account is created for this order alone (30-min expiry, see the
+    // cron sweep) and payment is confirmed automatically via webhook — no seller action
+    // needed. Falls back to the static "seller's own account" flow below on any failure,
+    // same trade-off as the original Flutterwave version of this feature.
+    if (input.paymentMethod === "BANK_TRANSFER" && hasFeature(store.subscription, "AUTO_BANK_TRANSFER")) {
+      const dva = await createOrderVirtualAccount({
+        email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storehike.ng`,
+        name: input.customer.name,
+        phone: input.customer.phone,
+      });
+
+      if (dva.ok) {
+        const expiresAt = new Date(Date.now() + DVA_EXPIRY_MINUTES * 60 * 1000);
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            paystackDvaCustomerCode: dva.customerCode,
+            paystackDvaAccountId: dva.accountId,
+            paystackDvaAccountNumber: dva.accountNumber,
+            paystackDvaBankName: dva.bankName,
+            expiresAt,
+          },
+        });
+
+        return {
+          ok: true,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          bankTransfer: { accountNumber: dva.accountNumber, bankName: dva.bankName, amount: total, expiresAt: expiresAt.toISOString() },
+        };
+      }
+
+      console.error("placeOrder: DVA creation failed, falling back to static bank transfer:", dva.error);
     }
 
     const emailData = {

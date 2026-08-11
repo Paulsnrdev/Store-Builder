@@ -9,6 +9,7 @@ import { NIGERIAN_STATES } from "@/lib/nigerian-states";
 import { previewDiscount } from "@/lib/actions/storefront";
 import { placeOrder } from "@/lib/actions/orders";
 import { confirmPaystackPayment } from "@/lib/actions/order-status";
+import { BankTransferPayment } from "@/components/storefront/bank-transfer-payment";
 
 type Zone = { id: string; name: string; states: string[]; rate: number; freeAbove: number | null };
 
@@ -63,6 +64,15 @@ export function CheckoutForm({
   const [orderError, setOrderError] = useState<string | null>(null);
 
   const [step, setStep] = useState<"details" | "payment">("details");
+
+  const [bankTransfer, setBankTransfer] = useState<{
+    orderId: string;
+    orderNumber: string;
+    accountNumber: string;
+    bankName: string;
+    amount: number;
+    expiresAt: string;
+  } | null>(null);
 
   const zone = useMemo(() => zones.find((z) => z.states.includes(state)), [zones, state]);
   // No state picked yet, or the seller hasn't set up a shipping zone covering the picked
@@ -132,9 +142,19 @@ export function CheckoutForm({
         return;
       }
 
+      if (result.bankTransfer) {
+        clear();
+        setBankTransfer({ orderId: result.orderId, orderNumber: result.orderNumber, ...result.bankTransfer });
+        return;
+      }
+
       clear();
       router.push(`/shop/${storeSlug}/order/${result.orderNumber}`);
     });
+  }
+
+  if (bankTransfer) {
+    return <BankTransferPayment storeSlug={storeSlug} {...bankTransfer} />;
   }
 
   if (items.length === 0) {

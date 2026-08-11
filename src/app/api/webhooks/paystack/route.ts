@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyWebhookSignature, verifyTransaction, PAYSTACK_TX_PREFIX } from "@/lib/paystack";
+import { verifyWebhookSignature, verifyTransaction, deactivateDedicatedVirtualAccount, PAYSTACK_TX_PREFIX } from "@/lib/paystack";
+import { creditStoreLedger } from "@/lib/ledger";
 import { sendEmail } from "@/lib/email";
-import { sellerSubscriptionActiveEmail, sellerSubscriptionPastDueEmail } from "@/lib/email-templates";
+import {
+  sellerSubscriptionActiveEmail,
+  sellerSubscriptionPastDueEmail,
+  sellerOrderPaidEmail,
+  customerOrderPaidEmail,
+} from "@/lib/email-templates";
 import { addCycle, cycleAmount, type Cycle } from "@/lib/billing-cycles";
 
 export async function POST(req: Request) {
@@ -37,6 +43,15 @@ export async function POST(req: Request) {
   const reference: string | undefined = event.data?.reference;
   if (!reference) return NextResponse.json({ received: true });
 
+  // Buyer order paid into a pooled Dedicated Virtual Account (seller has no Paystack account
+  // of their own — see createOrderVirtualAccount in src/lib/paystack.ts). Checked first: these
+  // use Paystack-generated customer codes tied to a one-time order, which never collide with
+  // a StoreHike subscription's reference/customer, so there's no ambiguity with the branches
+  // below.
+  if (await handleDedicatedAccountCharge(event.data, reference)) {
+    return NextResponse.json({ received: true });
+  }
+
   // Our own reference for a seller's first charge on a newly picked StoreHike plan — see
   // subscribeToPlan in src/lib/actions/billing.ts. Everything needed to activate it is
   // embedded in the reference itself, so this never depends on the webhook echoing back
@@ -53,6 +68,49 @@ export async function POST(req: Request) {
   const handled = await handleRenewalCharge(event.data, reference);
   if (!handled) console.error(`Paystack webhook: no subscription found for reference ${reference}`);
   return NextResponse.json({ received: true });
+}
+
+/**
+ * A buyer's payment into a pooled Dedicated Virtual Account. Matched back to its order via
+ * the customer_code stashed on the order at checkout time — not by reference, since Paystack
+ * generates its own reference for these and we don't control it. Returns whether this event
+ * was actually a DVA payment (so the caller knows whether to fall through to subscription
+ * handling), not whether it succeeded.
+ */
+async function handleDedicatedAccountCharge(data: Record<string, unknown>, reference: string): Promise<boolean> {
+  const { code: customerCode } = chargeCustomer(data);
+  if (!customerCode) return false;
+
+  const order = await prisma.order.findFirst({
+    where: { paystackDvaCustomerCode: customerCode, status: "PENDING" },
+    include: { items: true, store: true, customer: true },
+  });
+  if (!order) return false;
+
+  const verified = await verifyTransaction(reference);
+  if (!verified || verified.status !== "success") return true;
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { status: "PAID", paidAt: new Date(), paystackReference: reference },
+  });
+
+  const creditResult = await creditStoreLedger({ storeId: order.storeId, orderId: order.id, amount: verified.amount, reference });
+  if (!creditResult.ok) console.error(`Paystack webhook: failed to credit ledger for order ${order.id}: ${creditResult.error}`);
+
+  if (order.paystackDvaAccountId) await deactivateDedicatedVirtualAccount(order.paystackDvaAccountId);
+
+  const emailData = {
+    storeName: order.store.name,
+    orderNumber: order.orderNumber,
+    customerName: order.customer.name,
+    total: Number(order.total),
+    items: order.items.map((i) => ({ productName: i.productName, variantName: i.variantName, quantity: i.quantity, total: Number(i.total) })),
+  };
+  if (order.store.email) await sendEmail({ to: order.store.email, ...sellerOrderPaidEmail(emailData) });
+  if (order.customer.email) await sendEmail({ to: order.customer.email, ...customerOrderPaidEmail(emailData) });
+
+  return true;
 }
 
 function chargeCustomer(data: Record<string, unknown>): { code: string | undefined; email: string | undefined } {

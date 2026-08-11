@@ -144,3 +144,84 @@ export async function cancelPaystackSubscription(subscriptionCode: string, email
   });
   return res.ok;
 }
+
+// ---------- Pooled bank-transfer checkout (sellers without their own Paystack account) ----------
+
+type CreateOrderVirtualAccountResult =
+  | { ok: true; accountNumber: string; bankName: string; customerCode: string; accountId: string }
+  | { ok: false; error: string };
+
+/**
+ * Creates a fresh Paystack customer + Dedicated Virtual Account for a single order, so it
+ * can be given a real 30-minute expiry (see the cron sweep) instead of being a permanent,
+ * reusable account. Uses the two-step customer-then-account flow rather than the
+ * `/dedicated_account/assign` convenience endpoint, because assign is asynchronous (the
+ * account number only arrives later via webhook) and checkout needs it immediately.
+ *
+ * NOTE: written from Paystack's documented API shape but not exercised against a live
+ * account from this environment (their docs site blocks automated fetching) — verify against
+ * a real test transaction before trusting this with real orders. Store-name branding on the
+ * account (their B2B2C custom-naming feature, via a `subaccount` param) is deliberately not
+ * wired up here — it needs a bank-code-resolved Paystack subaccount per store, which nothing
+ * in this codebase does yet, so accounts created here show the platform's own name.
+ */
+export async function createOrderVirtualAccount(input: { email: string; name: string; phone: string }): Promise<CreateOrderVirtualAccountResult> {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return { ok: false, error: "Paystack is not configured yet." };
+
+  const [firstName, ...rest] = input.name.trim().split(/\s+/);
+  const lastName = rest.join(" ") || firstName;
+
+  const customerRes = await fetch(`${PAYSTACK_BASE_URL}/customer`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ email: input.email, first_name: firstName, last_name: lastName, phone: input.phone }),
+  });
+  const customerJson = await customerRes.json();
+  if (!customerRes.ok || !customerJson.status) {
+    return { ok: false, error: customerJson.message ?? "Could not start bank transfer." };
+  }
+  const customerCode: string = customerJson.data.customer_code;
+
+  const accountRes = await fetch(`${PAYSTACK_BASE_URL}/dedicated_account`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ customer: customerCode, preferred_bank: "titan-paystack" }),
+  });
+  const accountJson = await accountRes.json();
+  if (!accountRes.ok || !accountJson.status) {
+    return { ok: false, error: accountJson.message ?? "Could not generate a transfer account." };
+  }
+
+  return {
+    ok: true,
+    accountNumber: accountJson.data.account_number,
+    bankName: accountJson.data.bank?.name ?? "Paystack-Titan",
+    customerCode,
+    accountId: String(accountJson.data.id),
+  };
+}
+
+/**
+ * Deactivates a Dedicated Virtual Account once its order is paid or its 30-minute window
+ * expires, so it can't keep collecting money against a no-longer-open order. Never throws —
+ * a failed deactivation leaves an orphaned (but harmless) account rather than blocking the
+ * order status update that called it.
+ *
+ * NOTE: unverified against Paystack's live API from this environment — confirm the endpoint
+ * path/method against a real test account before relying on it.
+ */
+export async function deactivateDedicatedVirtualAccount(accountId: string): Promise<void> {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return;
+
+  try {
+    const res = await fetch(`${PAYSTACK_BASE_URL}/dedicated_account/${accountId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${secretKey}` },
+    });
+    if (!res.ok) console.error(`deactivateDedicatedVirtualAccount: Paystack returned ${res.status} for account ${accountId}`);
+  } catch (err) {
+    console.error("deactivateDedicatedVirtualAccount: failed", err);
+  }
+}
