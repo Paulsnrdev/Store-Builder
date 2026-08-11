@@ -12,7 +12,7 @@ export async function getOrderStatus(orderId: string): Promise<string | null> {
 type ConfirmResult = { ok: true } | { ok: false; error: string };
 
 /**
- * Called from the storefront checkout after Flutterwave's client-side widget
+ * Called from the storefront checkout after Paystack's client-side widget
  * reports a successful payment against the seller's own account. There is no
  * secret key or webhook available to re-verify this server-side (the seller
  * only provides a public key) — this trusts the browser's report. The
@@ -21,21 +21,21 @@ type ConfirmResult = { ok: true } | { ok: false; error: string };
  * calling this directly without actually paying; that trade-off was a
  * deliberate product decision to avoid requiring sellers hand over a secret key.
  */
-export async function confirmFlutterwavePayment(orderId: string, transactionRef: string): Promise<ConfirmResult> {
+export async function confirmPaystackPayment(orderId: string, reference: string): Promise<ConfirmResult> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: true, store: true, customer: true },
   });
-  if (!order || order.paymentMethod !== "FLUTTERWAVE") return { ok: false, error: "Order not found." };
+  if (!order || order.paymentMethod !== "PAYSTACK") return { ok: false, error: "Order not found." };
   if (order.status !== "PENDING") return { ok: true };
 
   try {
     await prisma.order.update({
       where: { id: orderId },
-      data: { status: "PAID", paidAt: new Date(), flutterwaveTxRef: transactionRef },
+      data: { status: "PAID", paidAt: new Date(), paystackReference: reference },
     });
   } catch (err) {
-    console.error("confirmFlutterwavePayment: failed to update order", err);
+    console.error("confirmPaystackPayment: failed to update order", err);
     return { ok: false, error: "Could not confirm payment. Please contact the seller." };
   }
 

@@ -14,13 +14,13 @@ export const CYCLE_LABEL: Record<Cycle, string> = {
 export const CYCLE_DISCOUNT: Record<Cycle, number> = { MONTHLY: 0, BIANNUAL: 0.1, YEARLY: 0.2 };
 export const CYCLE_MONTHS: Record<Cycle, number> = { MONTHLY: 1, BIANNUAL: 6, YEARLY: 12 };
 
-// Flutterwave's Payment Plan `interval` field — confirmed against their current API
-// docs (developer.flutterwave.com/v3.0/docs/payment-plans-1): a 6-month cycle is
-// "bi-annually" (hyphenated), not "biannually".
-export const FLUTTERWAVE_INTERVAL: Record<Cycle, string> = {
+// Paystack's Plan `interval` field — confirmed against their current API docs
+// (paystack.com/docs/payments/subscriptions): a 6-month cycle is "biannually"
+// (no hyphen), and a 12-month cycle is "annually", not "yearly".
+export const PAYSTACK_INTERVAL: Record<Cycle, string> = {
   MONTHLY: "monthly",
-  BIANNUAL: "bi-annually",
-  YEARLY: "yearly",
+  BIANNUAL: "biannually",
+  YEARLY: "annually",
 };
 
 /** Total amount billed for one full cycle, given the plan's monthly rate. */

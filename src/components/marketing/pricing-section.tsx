@@ -34,7 +34,7 @@ const PLANS: Plan[] = [
     productLimit: "Up to 20 products",
     features: [
       "Everything in Free",
-      "Card payments via Flutterwave",
+      "Card payments via Paystack",
       "Discount codes",
       "WhatsApp order messaging",
       "Sales dashboard & low-stock alerts",

@@ -42,7 +42,7 @@ export default async function SettingsPage() {
             bankName: store.bankName,
             bankAccountNumber: store.bankAccountNumber,
             bankAccountName: store.bankAccountName,
-            flutterwavePublicKey: store.flutterwavePublicKey,
+            paystackPublicKey: store.paystackPublicKey,
             isPublished: store.isPublished,
             slug: store.slug,
           }}

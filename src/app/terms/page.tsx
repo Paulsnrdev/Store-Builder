@@ -22,7 +22,7 @@ export default function TermsPage() {
       </p>
       <h2>Payments</h2>
       <p>
-        Card payments are processed by Flutterwave under their own terms. Bank transfer and cash-on-delivery
+        Card payments are processed by Paystack under their own terms. Bank transfer and cash-on-delivery
         orders are confirmed manually by the seller.
       </p>
       <h2>Acceptable use</h2>

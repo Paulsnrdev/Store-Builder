@@ -24,8 +24,8 @@ export default function PrivacyPage() {
       </p>
       <h2>Payments</h2>
       <p>
-        Card payments are processed by Flutterwave. We never see or store your full card details — those are
-        handled entirely by Flutterwave&apos;s payment infrastructure.
+        Card payments are processed by Paystack. We never see or store your full card details — those are
+        handled entirely by Paystack&apos;s payment infrastructure.
       </p>
       <h2>Data retention</h2>
       <p>Order and account data is kept for as long as your store or account remains active.</p>

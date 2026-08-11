@@ -14,13 +14,13 @@ type PlaceOrderInput = {
   items: CartItemRequest[];
   customer: { name: string; phone: string; email?: string };
   shippingAddress: { address: string; state: string };
-  paymentMethod: "FLUTTERWAVE" | "BANK_TRANSFER" | "CASH_ON_DELIVERY";
+  paymentMethod: "PAYSTACK" | "BANK_TRANSFER" | "CASH_ON_DELIVERY";
   discountCode?: string;
   customerNote?: string;
 };
 
 type PlaceOrderResult =
-  | { ok: true; orderId: string; orderNumber: string; flutterwave?: { publicKey: string; amount: number; txRef: string } }
+  | { ok: true; orderId: string; orderNumber: string; paystack?: { publicKey: string; amount: number; reference: string } }
   | { ok: false; error: string };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
@@ -30,10 +30,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   });
   if (!store) return { ok: false, error: "Store not found." };
 
-  if (input.paymentMethod === "FLUTTERWAVE" && !hasFeature(store.subscription, "CARD_PAYMENTS")) {
+  if (input.paymentMethod === "PAYSTACK" && !hasFeature(store.subscription, "CARD_PAYMENTS")) {
     return { ok: false, error: "Card payments aren't available for this store yet." };
   }
-  if (input.paymentMethod === "FLUTTERWAVE" && !store.flutterwavePublicKey) {
+  if (input.paymentMethod === "PAYSTACK" && !store.paystackPublicKey) {
     return { ok: false, error: "Card payments aren't set up for this store yet." };
   }
 
@@ -137,17 +137,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     });
 
     // Card checkout happens entirely client-side against the seller's own
-    // Flutterwave account (their public key, passed straight through to the
-    // browser widget) — StoreHike's server never calls Flutterwave for this.
+    // Paystack account (their public key, passed straight through to the
+    // browser widget) — StoreHike's server never calls Paystack for this.
     // "Pending" emails don't apply here; the buyer/seller "paid" emails go out
-    // once the widget's callback confirms payment (see confirmFlutterwavePayment
+    // once the widget's callback confirms payment (see confirmPaystackPayment
     // in src/lib/actions/order-status.ts).
-    if (input.paymentMethod === "FLUTTERWAVE") {
+    if (input.paymentMethod === "PAYSTACK") {
       return {
         ok: true,
         orderId: order.id,
         orderNumber: order.orderNumber,
-        flutterwave: { publicKey: store.flutterwavePublicKey!, amount: total, txRef: order.orderNumber },
+        paystack: { publicKey: store.paystackPublicKey!, amount: total, reference: order.orderNumber },
       };
     }
 

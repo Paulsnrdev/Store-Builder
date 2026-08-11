@@ -8,7 +8,7 @@ import { useCart } from "@/components/storefront/cart-context";
 import { NIGERIAN_STATES } from "@/lib/nigerian-states";
 import { previewDiscount } from "@/lib/actions/storefront";
 import { placeOrder } from "@/lib/actions/orders";
-import { confirmFlutterwavePayment } from "@/lib/actions/order-status";
+import { confirmPaystackPayment } from "@/lib/actions/order-status";
 
 type Zone = { id: string; name: string; states: string[]; rate: number; freeAbove: number | null };
 
@@ -18,7 +18,7 @@ const inputClass =
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
 const PAYMENT_OPTIONS = [
-  { value: "FLUTTERWAVE", label: "Pay with card", hint: "Powered by Flutterwave" },
+  { value: "PAYSTACK", label: "Pay with card", hint: "Powered by Paystack" },
   { value: "BANK_TRANSFER", label: "Bank transfer", hint: "Pay directly to the seller's account" },
   { value: "CASH_ON_DELIVERY", label: "Cash on delivery", hint: "Pay when your order arrives" },
 ] as const;
@@ -29,20 +29,20 @@ export function CheckoutForm({
   storeName,
   zones,
   allowCardPayments,
-  flutterwavePublicKey,
+  paystackPublicKey,
 }: {
   storeId: string;
   storeSlug: string;
   storeName: string;
   zones: Zone[];
   allowCardPayments: boolean;
-  flutterwavePublicKey: string | null;
+  paystackPublicKey: string | null;
 }) {
   const { items, subtotal, clear } = useCart();
   const router = useRouter();
 
-  const canPayWithFlutterwave = allowCardPayments && Boolean(flutterwavePublicKey);
-  const paymentOptions = canPayWithFlutterwave ? PAYMENT_OPTIONS : PAYMENT_OPTIONS.filter((o) => o.value !== "FLUTTERWAVE");
+  const canPayWithPaystack = allowCardPayments && Boolean(paystackPublicKey);
+  const paymentOptions = canPayWithPaystack ? PAYMENT_OPTIONS : PAYMENT_OPTIONS.filter((o) => o.value !== "PAYSTACK");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -50,8 +50,8 @@ export function CheckoutForm({
   const [address, setAddress] = useState("");
   const [state, setState] = useState("");
   const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"FLUTTERWAVE" | "BANK_TRANSFER" | "CASH_ON_DELIVERY">(
-    canPayWithFlutterwave ? "FLUTTERWAVE" : "BANK_TRANSFER"
+  const [paymentMethod, setPaymentMethod] = useState<"PAYSTACK" | "BANK_TRANSFER" | "CASH_ON_DELIVERY">(
+    canPayWithPaystack ? "PAYSTACK" : "BANK_TRANSFER"
   );
 
   const [discountCode, setDiscountCode] = useState("");
@@ -111,25 +111,24 @@ export function CheckoutForm({
         return;
       }
 
-      if (result.flutterwave && window.FlutterwaveCheckout) {
-        window.FlutterwaveCheckout({
-          public_key: result.flutterwave.publicKey,
-          tx_ref: result.flutterwave.txRef,
-          amount: result.flutterwave.amount,
+      if (result.paystack && window.PaystackPop) {
+        // Paystack amounts are in kobo (smallest unit), unlike the rest of this app
+        // which works in Naira — convert only at this final boundary call.
+        window.PaystackPop.setup({
+          key: result.paystack.publicKey,
+          email: email || `${phone.replace(/[^\d]/g, "")}@guest.storehike.ng`,
+          amount: Math.round(result.paystack.amount * 100),
           currency: "NGN",
-          customer: { email: email || `${phone.replace(/[^\d]/g, "")}@guest.storehike.ng`, name, phonenumber: phone },
-          customizations: { title: storeName },
+          ref: result.paystack.reference,
           callback: (response) => {
-            if (response.status === "successful" || response.status === "completed") {
-              startPlacing(async () => {
-                await confirmFlutterwavePayment(result.orderId, String(response.transaction_id ?? response.tx_ref ?? result.flutterwave!.txRef));
-                clear();
-                router.push(`/shop/${storeSlug}/order/${result.orderNumber}`);
-              });
-            }
+            startPlacing(async () => {
+              await confirmPaystackPayment(result.orderId, response.reference);
+              clear();
+              router.push(`/shop/${storeSlug}/order/${result.orderNumber}`);
+            });
           },
-          onclose: () => {},
-        });
+          onClose: () => {},
+        }).openIframe();
         return;
       }
 
@@ -144,7 +143,7 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-5">
-      {canPayWithFlutterwave && <Script src="https://checkout.flutterwave.com/v3.0/inline.js" strategy="afterInteractive" />}
+      {canPayWithPaystack && <Script src="https://js.paystack.co/v1/inline.js" strategy="afterInteractive" />}
       <div className="flex gap-1.5 sm:hidden">
         <div className="h-1 flex-1 rounded-full bg-(--store-primary,#111827)" />
         <div className={`h-1 flex-1 rounded-full ${step === "payment" ? "bg-(--store-primary,#111827)" : "bg-gray-200"}`} />

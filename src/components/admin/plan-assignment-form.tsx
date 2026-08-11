@@ -21,7 +21,7 @@ export function PlanAssignmentForm({
 }) {
   const [state, formAction, pending] = useActionState(assignStorePlan.bind(null, storeId), {} as AdminFormState);
   const initialInterval = (initial?.interval as Cycle) ?? "MONTHLY";
-  // Mirrors how the real Flutterwave webhook computes currentPeriodEnd (addCycle(new Date(),
+  // Mirrors how the real Paystack webhook computes currentPeriodEnd (addCycle(new Date(),
   // cycle)) — auto-filled here so the admin isn't guessing a date, but still editable for
   // backdating or syncing with an actual external subscription.
   const [periodEnd, setPeriodEnd] = useState(initial?.currentPeriodEnd || toDateInputValue(addCycle(new Date(), initialInterval)));

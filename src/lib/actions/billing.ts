@@ -6,73 +6,70 @@ import { requireStoreOwner } from "@/lib/store";
 import {
   createPaymentPlan,
   initializeTransaction,
-  findActiveFlutterwaveSubscription,
-  cancelFlutterwaveSubscription,
-  FLUTTERWAVE_TX_PREFIX,
-} from "@/lib/flutterwave";
+  findActivePaystackSubscription,
+  cancelPaystackSubscription,
+  PAYSTACK_TX_PREFIX,
+} from "@/lib/paystack";
 import { sendEmail } from "@/lib/email";
 import { sellerSubscriptionCanceledEmail } from "@/lib/email-templates";
-import { cycleAmount, FLUTTERWAVE_INTERVAL, type Cycle } from "@/lib/billing-cycles";
+import { cycleAmount, PAYSTACK_INTERVAL, type Cycle } from "@/lib/billing-cycles";
 import type { Plan } from "@/generated/prisma/client";
 
 type SubscribeResult = { ok: true; paymentLink: string } | { ok: false; error: string };
 
-const FLUTTERWAVE_PLAN_COLUMN = {
-  MONTHLY: "flutterwaveMonthlyPlanId",
-  BIANNUAL: "flutterwaveBiannualPlanId",
-  YEARLY: "flutterwaveAnnualPlanId",
+const PAYSTACK_PLAN_COLUMN = {
+  MONTHLY: "paystackMonthlyPlanCode",
+  BIANNUAL: "paystackBiannualPlanCode",
+  YEARLY: "paystackAnnualPlanCode",
 } as const;
 
-async function getOrCreateFlutterwavePlanId(plan: Plan, cycle: Cycle): Promise<{ ok: true; planId: string } | { ok: false; error: string }> {
-  const column = FLUTTERWAVE_PLAN_COLUMN[cycle];
+async function getOrCreatePaystackPlanCode(plan: Plan, cycle: Cycle): Promise<{ ok: true; planCode: string } | { ok: false; error: string }> {
+  const column = PAYSTACK_PLAN_COLUMN[cycle];
   const existing = plan[column];
-  if (existing) return { ok: true, planId: existing };
+  if (existing) return { ok: true, planCode: existing };
 
   const amount = cycleAmount(Number(plan.monthlyPrice), cycle);
   const result = await createPaymentPlan({
     name: `StoreHike ${plan.name} (${cycle.toLowerCase()})`,
     amount,
-    interval: FLUTTERWAVE_INTERVAL[cycle],
+    interval: PAYSTACK_INTERVAL[cycle],
     currency: plan.currency,
   });
   if (!result.ok) return result;
 
-  await prisma.plan.update({ where: { id: plan.id }, data: { [column]: result.planId } });
-  return { ok: true, planId: result.planId };
+  await prisma.plan.update({ where: { id: plan.id }, data: { [column]: result.planCode } });
+  return { ok: true, planCode: result.planCode };
 }
 
 export async function subscribeToPlan(planSlug: string, cycle: Cycle): Promise<SubscribeResult> {
   const store = await requireStoreOwner();
 
   if (!store.email) {
-    return { ok: false, error: "Add a store email in Settings first — Flutterwave needs one to bill you." };
+    return { ok: false, error: "Add a store email in Settings first — Paystack needs one to bill you." };
   }
 
   const plan = await prisma.plan.findUnique({ where: { slug: planSlug } });
   if (!plan || !plan.isActive) return { ok: false, error: "That plan isn't available right now." };
 
-  const planIdResult = await getOrCreateFlutterwavePlanId(plan, cycle);
-  if (!planIdResult.ok) return planIdResult;
+  const planCodeResult = await getOrCreatePaystackPlanCode(plan, cycle);
+  if (!planCodeResult.ok) return planCodeResult;
 
   const amount = cycleAmount(Number(plan.monthlyPrice), cycle);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  // Flutterwave's charge.completed webhook doesn't reliably echo back which payment
-  // plan a charge belongs to, so we can't rely on that to activate the subscription.
-  // Instead we embed everything the webhook needs directly in our own tx_ref: storeId,
-  // plan slug, and cycle. storeId (cuid) and slug (kebab-case) never contain "_", so
-  // splitting on it is unambiguous. See handleNewSubscriptionCharge in the webhook route.
-  const txRef = `${FLUTTERWAVE_TX_PREFIX}SUB_${store.id}_${plan.slug}_${cycle}_${Date.now()}`;
+  // Paystack's charge.success webhook doesn't reliably echo back which plan a charge
+  // belongs to, so we can't rely on that to activate the subscription. Instead we embed
+  // everything the webhook needs directly in our own reference: storeId, plan slug, and
+  // cycle. storeId (cuid) and slug (kebab-case) never contain "_", so splitting on it is
+  // unambiguous. See handleNewSubscriptionCharge in the webhook route.
+  const reference = `${PAYSTACK_TX_PREFIX}SUB_${store.id}_${plan.slug}_${cycle}_${Date.now()}`;
 
   const result = await initializeTransaction({
     email: store.email,
-    name: store.name,
-    phone: store.phone || "",
     amount,
     currency: plan.currency,
-    txRef,
-    redirectUrl: `${appUrl}/dashboard/billing`,
-    storeName: store.name,
-    paymentPlanId: planIdResult.planId,
+    reference,
+    callbackUrl: `${appUrl}/dashboard/billing`,
+    planCode: planCodeResult.planCode,
   });
 
   if (!result.ok) return result;
@@ -84,10 +81,12 @@ export async function cancelSubscription(): Promise<{ ok: true } | { ok: false; 
   const subscription = store.subscription;
   if (!subscription) return { ok: false, error: "No active subscription to cancel." };
 
-  const flutterwavePlanId = subscription.plan[FLUTTERWAVE_PLAN_COLUMN[subscription.interval as Cycle]];
-  if (flutterwavePlanId && store.email) {
-    const fwSubscription = await findActiveFlutterwaveSubscription(flutterwavePlanId, store.email);
-    if (fwSubscription) await cancelFlutterwaveSubscription(fwSubscription.id);
+  const paystackPlanCode = subscription.plan[PAYSTACK_PLAN_COLUMN[subscription.interval as Cycle]];
+  if (paystackPlanCode && store.email) {
+    const paystackSubscription = await findActivePaystackSubscription(paystackPlanCode, store.email);
+    if (paystackSubscription) {
+      await cancelPaystackSubscription(paystackSubscription.subscription_code, paystackSubscription.email_token);
+    }
   }
 
   await prisma.subscription.update({

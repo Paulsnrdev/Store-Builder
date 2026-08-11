@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSubscriptionStatus } from "@/lib/actions/billing";
 
-/** Shown right after returning from Flutterwave, while we wait for the webhook to land. */
+/** Shown right after returning from Paystack, while we wait for the webhook to land. */
 export function SubscriptionStatusPoller() {
   const router = useRouter();
   const [attempts, setAttempts] = useState(0);

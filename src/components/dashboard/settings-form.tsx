@@ -29,7 +29,7 @@ type Initial = {
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
-  flutterwavePublicKey: string | null;
+  paystackPublicKey: string | null;
   isPublished: boolean;
   slug: string;
   niche: string;
@@ -164,11 +164,11 @@ export function SettingsForm({ initial, canCustomizeTheme = true }: { initial: I
       </fieldset>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Flutterwave public key</label>
+        <label className="block text-sm font-medium text-gray-700">Paystack public key</label>
         <p className="mb-1 text-xs text-gray-400">
-          From your Flutterwave dashboard → Settings → API Keys. Buyers pay you directly — StoreHike never touches your funds.
+          From your Paystack dashboard → Settings → API Keys &amp; Webhooks. Buyers pay you directly — StoreHike never touches your funds.
         </p>
-        <Input name="flutterwavePublicKey" defaultValue={initial.flutterwavePublicKey ?? ""} placeholder="FLWPUBK_xxxxxxxx" />
+        <Input name="paystackPublicKey" defaultValue={initial.paystackPublicKey ?? ""} placeholder="pk_live_xxxxxxxx" />
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

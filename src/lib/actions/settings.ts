@@ -28,7 +28,7 @@ const settingsSchema = z.object({
   bankName: z.string().nullable().optional(),
   bankAccountNumber: z.string().nullable().optional(),
   bankAccountName: z.string().nullable().optional(),
-  flutterwavePublicKey: z.string().nullable().optional(),
+  paystackPublicKey: z.string().nullable().optional(),
   isPublished: z.coerce.boolean().default(false),
 });
 
@@ -58,7 +58,7 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
     bankName: formData.get("bankName") || null,
     bankAccountNumber: formData.get("bankAccountNumber") || null,
     bankAccountName: formData.get("bankAccountName") || null,
-    flutterwavePublicKey: formData.get("flutterwavePublicKey") || null,
+    paystackPublicKey: formData.get("paystackPublicKey") || null,
     isPublished: formData.get("isPublished") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
@@ -92,7 +92,7 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
       bankName: data.bankName,
       bankAccountNumber: data.bankAccountNumber,
       bankAccountName: data.bankAccountName,
-      flutterwavePublicKey: data.flutterwavePublicKey,
+      paystackPublicKey: data.paystackPublicKey,
       isPublished: data.isPublished,
     },
   });

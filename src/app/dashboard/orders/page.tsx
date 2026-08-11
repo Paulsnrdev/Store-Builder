@@ -11,7 +11,7 @@ import { TableShell, TableHead, TableBody, TableEmpty } from "@/components/ui/ta
 import { StatusBadge } from "@/components/ui/status-badge";
 
 const STATUSES = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
-const PAYMENT_METHODS = ["FLUTTERWAVE", "BANK_TRANSFER", "CASH_ON_DELIVERY"];
+const PAYMENT_METHODS = ["PAYSTACK", "BANK_TRANSFER", "CASH_ON_DELIVERY"];
 
 export default async function OrdersPage({
   searchParams,

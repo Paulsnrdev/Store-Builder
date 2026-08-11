@@ -39,7 +39,7 @@ export default async function OrderConfirmationPage({
       <h1 className="text-xl font-semibold text-gray-900">Order {order.orderNumber}</h1>
       <p className="mt-1 text-sm text-gray-500">{STATUS_MESSAGE[order.status] ?? order.status}</p>
 
-      {order.paymentMethod === "FLUTTERWAVE" && <PaymentStatusPoller orderId={order.id} initialStatus={order.status} />}
+      {order.paymentMethod === "PAYSTACK" && <PaymentStatusPoller orderId={order.id} initialStatus={order.status} />}
 
       {bankInstructions && (
         <div className="mt-4 rounded-md bg-amber-50 p-3 text-left text-sm text-amber-800">{bankInstructions}</div>

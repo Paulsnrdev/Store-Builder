@@ -39,12 +39,12 @@ function revalidateOrder(orderId: string) {
   revalidatePath("/dashboard");
 }
 
-/** Bank transfer / cash on delivery orders only — Flutterwave orders are confirmed exclusively by the webhook. */
+/** Bank transfer / cash on delivery orders only — Paystack orders are confirmed automatically by the checkout widget's callback. */
 export async function markOrderPaid(orderId: string): Promise<ActionResult> {
   const store = await getCurrentStore();
   const order = await loadOwnedOrder(orderId, store.id);
   if (!order) return { ok: false, error: "Order not found." };
-  if (order.paymentMethod === "FLUTTERWAVE") return { ok: false, error: "Flutterwave orders are confirmed automatically." };
+  if (order.paymentMethod === "PAYSTACK") return { ok: false, error: "Paystack orders are confirmed automatically." };
   if (order.status !== "PENDING") return { ok: false, error: "Only pending orders can be marked as paid." };
 
   await prisma.order.update({ where: { id: order.id }, data: { status: "PAID", paidAt: new Date() } });

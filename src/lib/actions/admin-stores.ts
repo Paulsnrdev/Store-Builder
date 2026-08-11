@@ -92,7 +92,7 @@ export async function assignStorePlan(storeId: string, _prev: AdminFormState, fo
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
   // Left blank, currentPeriodEnd defaults to one interval from now — matching what a real
-  // Flutterwave charge sets (see handleNewSubscriptionCharge in the webhook route). Without
+  // Paystack charge sets (see handleNewSubscriptionCharge in the webhook route). Without
   // this, a manually-assigned plan has no period end, so canceling it drops entitlement
   // immediately instead of honoring the grace period isSubscriptionEntitled expects.
   const data = {

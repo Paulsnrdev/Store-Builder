@@ -32,7 +32,7 @@ const FEATURES = [
 const STEPS = [
   { step: "1", title: "Create your store", body: "Sign up and add your first products in minutes — no code, no design skills needed." },
   { step: "2", title: "Share your link", body: "Swap your Instagram bio link and WhatsApp status for a real storefront customers can browse and pay on." },
-  { step: "3", title: "Get paid, fulfil orders", body: "Payments land in your account via Flutterwave. Manage every order from one dashboard." },
+  { step: "3", title: "Get paid, fulfil orders", body: "Payments land in your account via Paystack. Manage every order from one dashboard." },
 ];
 
 export default function MarketingHomePage() {
