@@ -4,9 +4,10 @@ import { ChangePasswordForm } from "@/components/dashboard/change-password-form"
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { hasFeature } from "@/lib/plan-features";
+import { listNigerianBanks } from "@/lib/paystack";
 
 export default async function SettingsPage() {
-  const store = await getCurrentStore();
+  const [store, banks] = await Promise.all([getCurrentStore(), listNigerianBanks()]);
 
   const theme = (store.theme ?? {}) as { color?: string; font?: string };
   const socialLinks = (store.socialLinks ?? {}) as {
@@ -40,12 +41,15 @@ export default async function SettingsPage() {
             announcementText: store.announcementText,
             announcementEnabled: store.announcementEnabled,
             bankName: store.bankName,
+            bankCode: store.bankCode,
             bankAccountNumber: store.bankAccountNumber,
             bankAccountName: store.bankAccountName,
+            bankAccountVerified: store.bankAccountVerified,
             paystackPublicKey: store.paystackPublicKey,
             isPublished: store.isPublished,
             slug: store.slug,
           }}
+          banks={banks}
           canCustomizeTheme={hasFeature(store.subscription, "THEME_CUSTOMIZATION")}
         />
       </div>

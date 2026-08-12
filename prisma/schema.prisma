@@ -102,8 +102,16 @@ model Store {
   paystackPublicKey       String?
   bankAccountVerified     Boolean @default(false)
   bankName                String?
+  // Paystack's own bank code for bankName (e.g. "058" for GTBank) — needed to create the
+  // Paystack subaccount below; free-typed bankName alone isn't enough for their API.
+  bankCode                String?
   bankAccountNumber       String?
   bankAccountName         String?
+  // Lazily created (see getOrCreateStoreSubaccount in orders.ts) once bankAccountVerified is
+  // true, purely so pooled Dedicated Virtual Accounts can show this store's name instead of
+  // the platform's own — set with percentage_charge: 100 so nothing auto-settles to the
+  // seller's bank; the pooled ledger stays the only payout path.
+  paystackSubaccountCode  String?
   isSuspended             Boolean @default(false)
   suspendedAt             DateTime?
   suspendedReason         String?

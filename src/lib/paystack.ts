@@ -145,6 +145,71 @@ export async function cancelPaystackSubscription(subscriptionCode: string, email
   return res.ok;
 }
 
+// ---------- Seller bank verification + subaccount (for DVA custom naming) ----------
+
+type Bank = { name: string; code: string };
+
+/** Full list of Nigerian banks Paystack supports, for the settings-form bank picker. */
+export async function listNigerianBanks(): Promise<Bank[]> {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return [];
+
+  const res = await fetch(`${PAYSTACK_BASE_URL}/bank?country=nigeria&currency=NGN`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) return [];
+
+  return (json.data as { name: string; code: string }[]).map((b) => ({ name: b.name, code: b.code }));
+}
+
+type ResolveBankAccountResult = { ok: true; accountName: string } | { ok: false; error: string };
+
+/** Confirms an account number is real and returns the bank-registered account holder name — never trust a seller-typed name. */
+export async function resolveBankAccount(accountNumber: string, bankCode: string): Promise<ResolveBankAccountResult> {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return { ok: false, error: "Paystack is not configured yet." };
+
+  const res = await fetch(`${PAYSTACK_BASE_URL}/bank/resolve?account_number=${encodeURIComponent(accountNumber)}&bank_code=${encodeURIComponent(bankCode)}`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    return { ok: false, error: json.message ?? "Could not verify this account number." };
+  }
+  return { ok: true, accountName: json.data.account_name };
+}
+
+type CreateSubaccountResult = { ok: true; subaccountCode: string } | { ok: false; error: string };
+
+/**
+ * Creates a Paystack subaccount for a store, purely so pooled Dedicated Virtual Accounts can
+ * be branded with the store's name (see createOrderVirtualAccount). percentage_charge: 100
+ * means the platform's main account keeps 100% of every split — see the note above
+ * createOrderVirtualAccount on why this specific combination still needs live verification.
+ */
+export async function createSubaccount(input: { businessName: string; bankCode: string; accountNumber: string }): Promise<CreateSubaccountResult> {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return { ok: false, error: "Paystack is not configured yet." };
+
+  const res = await fetch(`${PAYSTACK_BASE_URL}/subaccount`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      business_name: input.businessName,
+      settlement_bank: input.bankCode,
+      account_number: input.accountNumber,
+      percentage_charge: 100,
+    }),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    console.error("createSubaccount: failed", { businessName: input.businessName, status: res.status, response: json });
+    return { ok: false, error: json.message ?? "Could not set up store branding for transfers." };
+  }
+  return { ok: true, subaccountCode: json.data.subaccount_code };
+}
+
 // ---------- Pooled bank-transfer checkout (sellers without their own Paystack account) ----------
 
 type CreateOrderVirtualAccountResult =
@@ -177,7 +242,9 @@ function toInternationalNigerianPhone(phone: string): string {
   return `+234${digits}`;
 }
 
-export async function createOrderVirtualAccount(input: { email: string; name: string; phone: string }): Promise<CreateOrderVirtualAccountResult> {
+export async function createOrderVirtualAccount(
+  input: { email: string; name: string; phone: string; subaccountCode?: string | null }
+): Promise<CreateOrderVirtualAccountResult> {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey) return { ok: false, error: "Paystack is not configured yet." };
 
@@ -192,9 +259,6 @@ export async function createOrderVirtualAccount(input: { email: string; name: st
   });
   const customerJson = await customerRes.json();
   if (!customerRes.ok || !customerJson.status) {
-    // Temporary diagnostic: the top-level `message` alone hasn't been enough to root-cause
-    // the "Customer phone number is required" failure — logging the full request/response so
-    // the next real attempt reveals what Paystack is actually rejecting. Remove once resolved.
     console.error("createOrderVirtualAccount: customer creation failed", {
       sentBody: customerBody,
       status: customerRes.status,
@@ -204,7 +268,17 @@ export async function createOrderVirtualAccount(input: { email: string; name: st
   }
   const customerCode: string = customerJson.data.customer_code;
 
-  const accountBody = { customer: customerCode, preferred_bank: "titan-paystack" };
+  // Passing `subaccount` here is what makes the account show the store's own name instead of
+  // the platform's — but it also has a real money side effect: Paystack automatically splits
+  // settlement to the subaccount's bank per its percentage_charge. createSubaccount below sets
+  // percentage_charge: 100 (everything stays with the platform's pooled account) specifically
+  // to prevent that, but this exact combination (subaccount + DVA, not subaccount + a normal
+  // transaction charge) has not been confirmed against a live Paystack transfer from this
+  // environment — verify with a real small transfer, checking the money lands fully in the
+  // platform's balance and nothing auto-settles to the seller's bank, before trusting this.
+  const accountBody: Record<string, unknown> = { customer: customerCode, preferred_bank: "titan-paystack" };
+  if (input.subaccountCode) accountBody.subaccount = input.subaccountCode;
+
   const accountRes = await fetch(`${PAYSTACK_BASE_URL}/dedicated_account`, {
     method: "POST",
     headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },

@@ -8,9 +8,35 @@ import { randomOrderNumber } from "@/lib/order-number";
 import { sendEmail } from "@/lib/email";
 import { customerOrderPendingEmail, sellerOrderPendingEmail } from "@/lib/email-templates";
 import { hasFeature } from "@/lib/plan-features";
-import { createOrderVirtualAccount } from "@/lib/paystack";
+import { createOrderVirtualAccount, createSubaccount } from "@/lib/paystack";
+import type { Store } from "@/generated/prisma/client";
 
 const DVA_EXPIRY_MINUTES = 30;
+
+/**
+ * Lazily creates and caches a Paystack subaccount for a store, purely so its pooled DVAs can
+ * be branded with the store's name instead of the platform's — see the note on
+ * createOrderVirtualAccount for why this needs live verification before being fully trusted.
+ * Returns null (not an error) if the store hasn't verified a bank account yet — checkout
+ * still proceeds, just without the custom naming, same as before this existed.
+ */
+async function getOrCreateStoreSubaccount(store: Store): Promise<string | null> {
+  if (store.paystackSubaccountCode) return store.paystackSubaccountCode;
+  if (!store.bankAccountVerified || !store.bankCode || !store.bankAccountNumber) return null;
+
+  const result = await createSubaccount({
+    businessName: store.name,
+    bankCode: store.bankCode,
+    accountNumber: store.bankAccountNumber,
+  });
+  if (!result.ok) {
+    console.error(`getOrCreateStoreSubaccount: failed for store ${store.id}:`, result.error);
+    return null;
+  }
+
+  await prisma.store.update({ where: { id: store.id }, data: { paystackSubaccountCode: result.subaccountCode } });
+  return result.subaccountCode;
+}
 
 type PlaceOrderInput = {
   storeId: string;
@@ -166,10 +192,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     // needed. Falls back to the static "seller's own account" flow below on any failure,
     // same trade-off as the original Flutterwave version of this feature.
     if (input.paymentMethod === "BANK_TRANSFER" && hasFeature(store.subscription, "AUTO_BANK_TRANSFER")) {
+      const subaccountCode = await getOrCreateStoreSubaccount(store);
       const dva = await createOrderVirtualAccount({
         email: input.customer.email || `${input.customer.phone.replace(/[^\d]/g, "")}@guest.storehike.ng`,
         name: input.customer.name,
         phone: input.customer.phone,
+        subaccountCode,
       });
 
       if (dva.ok) {

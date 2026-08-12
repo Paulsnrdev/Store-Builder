@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStore } from "@/lib/store";
 import { hasFeature } from "@/lib/plan-features";
 import { NICHE_VALUES } from "@/lib/store-niches";
+import { resolveBankAccount } from "@/lib/paystack";
 
 const settingsSchema = z.object({
   name: z.string().min(1),
@@ -26,8 +27,10 @@ const settingsSchema = z.object({
   announcementText: z.string().nullable().optional(),
   announcementEnabled: z.coerce.boolean().default(false),
   bankName: z.string().nullable().optional(),
+  bankCode: z.string().nullable().optional(),
   bankAccountNumber: z.string().nullable().optional(),
   bankAccountName: z.string().nullable().optional(),
+  bankAccountVerified: z.coerce.boolean().default(false),
   paystackPublicKey: z.string().nullable().optional(),
   isPublished: z.coerce.boolean().default(false),
 });
@@ -56,8 +59,10 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
     announcementText: formData.get("announcementText") || null,
     announcementEnabled: formData.get("announcementEnabled") === "on",
     bankName: formData.get("bankName") || null,
+    bankCode: formData.get("bankCode") || null,
     bankAccountNumber: formData.get("bankAccountNumber") || null,
     bankAccountName: formData.get("bankAccountName") || null,
+    bankAccountVerified: formData.get("bankAccountVerified") === "true",
     paystackPublicKey: formData.get("paystackPublicKey") || null,
     isPublished: formData.get("isPublished") === "on",
   });
@@ -67,6 +72,12 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
   // Font choice is a Basic+ feature (accent color stays available on every plan) — silently
   // clamp rather than error, so a gated field doesn't block saving the rest of this form.
   const themeFont = hasFeature(store.subscription, "THEME_CUSTOMIZATION") ? data.themeFont : "sans";
+
+  // A previously-created Paystack subaccount (see getOrCreateStoreSubaccount in orders.ts) is
+  // tied to the bank details it was created with — if those changed, drop it so a fresh one
+  // gets provisioned against the new account instead of silently branding transfers with a
+  // subaccount that now points at the wrong bank.
+  const bankDetailsChanged = data.bankAccountNumber !== store.bankAccountNumber || data.bankCode !== store.bankCode;
 
   await prisma.store.update({
     where: { id: store.id },
@@ -90,8 +101,11 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
       announcementText: data.announcementText,
       announcementEnabled: data.announcementEnabled,
       bankName: data.bankName,
+      bankCode: data.bankCode,
       bankAccountNumber: data.bankAccountNumber,
       bankAccountName: data.bankAccountName,
+      bankAccountVerified: data.bankAccountVerified,
+      paystackSubaccountCode: bankDetailsChanged ? null : undefined,
       paystackPublicKey: data.paystackPublicKey,
       isPublished: data.isPublished,
     },
@@ -100,4 +114,13 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
   revalidatePath("/dashboard/settings");
   revalidatePath(`/shop/${store.slug}`, "layout");
   return { success: true };
+}
+
+type VerifyBankAccountResult = { ok: true; accountName: string } | { ok: false; error: string };
+
+/** Called from the settings form's "Verify" button — confirms the account is real via Paystack before the seller can save it as verified. */
+export async function verifyBankAccount(accountNumber: string, bankCode: string): Promise<VerifyBankAccountResult> {
+  await getCurrentStore();
+  if (!accountNumber.trim() || !bankCode.trim()) return { ok: false, error: "Select a bank and enter an account number." };
+  return resolveBankAccount(accountNumber, bankCode);
 }

@@ -1,13 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { updateStoreSettings, type SettingsFormState } from "@/lib/actions/settings";
+import { useActionState, useState, useTransition } from "react";
+import { updateStoreSettings, verifyBankAccount, type SettingsFormState } from "@/lib/actions/settings";
 import { SingleImageUploader } from "@/components/dashboard/image-uploader";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { STORE_NICHES } from "@/lib/store-niches";
+
+type Bank = { name: string; code: string };
 
 type Initial = {
   name: string;
@@ -27,8 +29,10 @@ type Initial = {
   announcementText: string | null;
   announcementEnabled: boolean;
   bankName: string | null;
+  bankCode: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
+  bankAccountVerified: boolean;
   paystackPublicKey: string | null;
   isPublished: boolean;
   slug: string;
@@ -37,10 +41,33 @@ type Initial = {
 
 const initialState: SettingsFormState = {};
 
-export function SettingsForm({ initial, canCustomizeTheme = true }: { initial: Initial; canCustomizeTheme?: boolean }) {
+export function SettingsForm({ initial, banks, canCustomizeTheme = true }: { initial: Initial; banks: Bank[]; canCustomizeTheme?: boolean }) {
   const [state, formAction, pending] = useActionState(updateStoreSettings, initialState);
   const [logoUrl, setLogoUrl] = useState(initial.logoUrl);
   const [bannerUrl, setBannerUrl] = useState(initial.bannerUrl);
+
+  const [bankCode, setBankCode] = useState(initial.bankCode ?? "");
+  const [bankAccountNumber, setBankAccountNumber] = useState(initial.bankAccountNumber ?? "");
+  const [bankAccountName, setBankAccountName] = useState(initial.bankAccountName ?? "");
+  const [bankVerified, setBankVerified] = useState(initial.bankAccountVerified);
+  const [bankVerifyError, setBankVerifyError] = useState<string | null>(null);
+  const [verifying, startVerifying] = useTransition();
+
+  const bankName = banks.find((b) => b.code === bankCode)?.name ?? "";
+
+  function handleVerifyBank() {
+    setBankVerifyError(null);
+    startVerifying(async () => {
+      const result = await verifyBankAccount(bankAccountNumber, bankCode);
+      if (!result.ok) {
+        setBankVerified(false);
+        setBankVerifyError(result.error);
+        return;
+      }
+      setBankAccountName(result.accountName);
+      setBankVerified(true);
+    });
+  }
 
   return (
     <form action={formAction} className="max-w-lg space-y-6">
@@ -157,9 +184,43 @@ export function SettingsForm({ initial, canCustomizeTheme = true }: { initial: I
         <legend className="px-1 text-sm font-medium text-gray-700">Bank transfer details</legend>
         <p className="mb-3 text-xs text-gray-400">Shown to customers who pay by bank transfer.</p>
         <div className="space-y-3">
-          <Input name="bankName" defaultValue={initial.bankName ?? ""} placeholder="Bank name" />
-          <Input name="bankAccountNumber" defaultValue={initial.bankAccountNumber ?? ""} placeholder="Account number" />
-          <Input name="bankAccountName" defaultValue={initial.bankAccountName ?? ""} placeholder="Account name" />
+          <input type="hidden" name="bankName" value={bankName} />
+          <input type="hidden" name="bankCode" value={bankCode} />
+          <input type="hidden" name="bankAccountName" value={bankAccountName} />
+          <input type="hidden" name="bankAccountVerified" value={bankVerified ? "true" : "false"} />
+
+          <Select
+            value={bankCode}
+            onChange={(e) => {
+              setBankCode(e.target.value);
+              setBankVerified(false);
+            }}
+          >
+            <option value="">Select bank</option>
+            {banks.map((b) => (
+              <option key={b.code} value={b.code}>
+                {b.name}
+              </option>
+            ))}
+          </Select>
+
+          <Input
+            value={bankAccountNumber}
+            onChange={(e) => {
+              setBankAccountNumber(e.target.value);
+              setBankVerified(false);
+            }}
+            placeholder="Account number"
+          />
+
+          <Button type="button" variant="secondary" size="sm" onClick={handleVerifyBank} disabled={verifying || !bankCode || !bankAccountNumber}>
+            {verifying ? "Verifying..." : "Verify account"}
+          </Button>
+
+          {bankVerifyError && <p className="text-xs font-medium text-red-600">{bankVerifyError}</p>}
+          {bankVerified && bankAccountName && (
+            <p className="text-xs font-medium text-green-700">Verified: {bankAccountName}</p>
+          )}
         </div>
       </fieldset>
 
