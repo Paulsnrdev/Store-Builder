@@ -184,24 +184,39 @@ export async function createOrderVirtualAccount(input: { email: string; name: st
   const [firstName, ...rest] = input.name.trim().split(/\s+/);
   const lastName = rest.join(" ") || firstName;
 
+  const customerBody = { email: input.email, first_name: firstName, last_name: lastName, phone: toInternationalNigerianPhone(input.phone) };
   const customerRes = await fetch(`${PAYSTACK_BASE_URL}/customer`, {
     method: "POST",
     headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ email: input.email, first_name: firstName, last_name: lastName, phone: toInternationalNigerianPhone(input.phone) }),
+    body: JSON.stringify(customerBody),
   });
   const customerJson = await customerRes.json();
   if (!customerRes.ok || !customerJson.status) {
+    // Temporary diagnostic: the top-level `message` alone hasn't been enough to root-cause
+    // the "Customer phone number is required" failure — logging the full request/response so
+    // the next real attempt reveals what Paystack is actually rejecting. Remove once resolved.
+    console.error("createOrderVirtualAccount: customer creation failed", {
+      sentBody: customerBody,
+      status: customerRes.status,
+      response: customerJson,
+    });
     return { ok: false, error: customerJson.message ?? "Could not start bank transfer." };
   }
   const customerCode: string = customerJson.data.customer_code;
 
+  const accountBody = { customer: customerCode, preferred_bank: "titan-paystack" };
   const accountRes = await fetch(`${PAYSTACK_BASE_URL}/dedicated_account`, {
     method: "POST",
     headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ customer: customerCode, preferred_bank: "titan-paystack" }),
+    body: JSON.stringify(accountBody),
   });
   const accountJson = await accountRes.json();
   if (!accountRes.ok || !accountJson.status) {
+    console.error("createOrderVirtualAccount: dedicated account creation failed", {
+      sentBody: accountBody,
+      status: accountRes.status,
+      response: accountJson,
+    });
     return { ok: false, error: accountJson.message ?? "Could not generate a transfer account." };
   }
 
