@@ -223,12 +223,11 @@ type CreateOrderVirtualAccountResult =
  * `/dedicated_account/assign` convenience endpoint, because assign is asynchronous (the
  * account number only arrives later via webhook) and checkout needs it immediately.
  *
- * NOTE: written from Paystack's documented API shape but not exercised against a live
- * account from this environment (their docs site blocks automated fetching) — verify against
- * a real test transaction before trusting this with real orders. Store-name branding on the
- * account (their B2B2C custom-naming feature, via a `subaccount` param) is deliberately not
- * wired up here — it needs a bank-code-resolved Paystack subaccount per store, which nothing
- * in this codebase does yet, so accounts created here show the platform's own name.
+ * Exercised against a live Paystack account and fixed twice against real failures: the
+ * customer step needs an international-format phone (+234...), and — despite not being in
+ * Paystack's own docs, which this environment can't fetch — the /dedicated_account step
+ * independently validates `phone` on its own body even when `customer` already points at a
+ * customer record that has one.
  */
 /**
  * Paystack's customer API rejects local Nigerian numbers (e.g. "07069094959") as invalid —
@@ -276,7 +275,15 @@ export async function createOrderVirtualAccount(
   // transaction charge) has not been confirmed against a live Paystack transfer from this
   // environment — verify with a real small transfer, checking the money lands fully in the
   // platform's balance and nothing auto-settles to the seller's bank, before trusting this.
-  const accountBody: Record<string, unknown> = { customer: customerCode, preferred_bank: "titan-paystack" };
+  // Confirmed via a live failure: /dedicated_account validates `phone` on its own request
+  // body even when `customer` already references a customer record that has one — omitting
+  // it here was the actual root cause of every prior "Customer phone number is required"
+  // failure, not the customer-creation step (which was succeeding the whole time).
+  const accountBody: Record<string, unknown> = {
+    customer: customerCode,
+    preferred_bank: "titan-paystack",
+    phone: toInternationalNigerianPhone(input.phone),
+  };
   if (input.subaccountCode) accountBody.subaccount = input.subaccountCode;
 
   const accountRes = await fetch(`${PAYSTACK_BASE_URL}/dedicated_account`, {
