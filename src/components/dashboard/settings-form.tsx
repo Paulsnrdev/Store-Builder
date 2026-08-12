@@ -205,6 +205,7 @@ export function SettingsForm({ initial, banks, canCustomizeTheme = true }: { ini
           </Select>
 
           <Input
+            name="bankAccountNumber"
             value={bankAccountNumber}
             onChange={(e) => {
               setBankAccountNumber(e.target.value);
