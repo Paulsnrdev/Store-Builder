@@ -333,3 +333,70 @@ export async function deactivateDedicatedVirtualAccount(accountId: string): Prom
     console.error("deactivateDedicatedVirtualAccount: failed", err);
   }
 }
+
+// ---------- Seller withdrawals (Paystack Transfers) ----------
+
+type CreateTransferRecipientResult = { ok: true; recipientCode: string } | { ok: false; error: string };
+
+/** Paystack requires a "Transfer Recipient" registered against a bank account before it'll send money to it — created once per store and cached (see getOrCreateTransferRecipient in ledger.ts). */
+export async function createTransferRecipient(input: { name: string; accountNumber: string; bankCode: string }): Promise<CreateTransferRecipientResult> {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return { ok: false, error: "Paystack is not configured yet." };
+
+  const res = await fetch(`${PAYSTACK_BASE_URL}/transferrecipient`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "nuban", name: input.name, account_number: input.accountNumber, bank_code: input.bankCode, currency: "NGN" }),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    console.error("createTransferRecipient: failed", { status: res.status, response: json });
+    return { ok: false, error: json.message ?? "Could not set up payout details." };
+  }
+  return { ok: true, recipientCode: json.data.recipient_code };
+}
+
+type InitiateTransferResult =
+  | { ok: true; status: "success" | "pending"; transferCode: string }
+  | { ok: false; error: string; requiresOtp?: boolean }
+  | { ok: false; error: string; insufficientBalance: true };
+
+/**
+ * Sends money from the platform's Paystack balance to a seller's bank account.
+ *
+ * NOTE: Paystack accounts require OTP approval for transfers by default (Settings ->
+ * Preferences -> "Approve transfers without OTP" must be turned on to allow API-only
+ * transfers) — without that, this call returns status "otp" and cannot complete, since
+ * there's no flow here for entering a one-time code. If withdrawals start failing with
+ * requiresOtp: true, that dashboard setting is what needs changing, not this code.
+ */
+export async function initiateTransfer(input: { amount: number; recipientCode: string; reason: string; reference: string }): Promise<InitiateTransferResult> {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return { ok: false, error: "Paystack is not configured yet." };
+
+  const res = await fetch(`${PAYSTACK_BASE_URL}/transfer`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      source: "balance",
+      amount: Math.round(input.amount * 100),
+      recipient: input.recipientCode,
+      reason: input.reason,
+      reference: input.reference,
+    }),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    console.error("initiateTransfer: failed", { status: res.status, response: json });
+    if (json.code === "insufficient_balance" || /insufficient/i.test(json.message ?? "")) {
+      return { ok: false, error: json.message ?? "Insufficient balance to complete this transfer.", insufficientBalance: true };
+    }
+    return { ok: false, error: json.message ?? "Could not process withdrawal." };
+  }
+
+  if (json.data.status === "otp") {
+    return { ok: false, error: "Transfers on this Paystack account require OTP approval — disable that in Paystack settings to allow automatic withdrawals.", requiresOtp: true };
+  }
+
+  return { ok: true, status: json.data.status === "success" ? "success" : "pending", transferCode: json.data.transfer_code };
+}

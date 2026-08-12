@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature, verifyTransaction, deactivateDedicatedVirtualAccount, PAYSTACK_TX_PREFIX } from "@/lib/paystack";
-import { creditStoreLedger } from "@/lib/ledger";
+import { creditStoreLedger, resolveWithdrawal } from "@/lib/ledger";
 import { sendEmail } from "@/lib/email";
 import {
   sellerSubscriptionActiveEmail,
@@ -33,6 +33,16 @@ export async function POST(req: Request) {
   // this as its own event rather than a "failed" status on charge.success.
   if (event.event === "invoice.payment_failed") {
     await handleFailedSubscriptionCharge(event.data ?? {});
+    return NextResponse.json({ received: true });
+  }
+
+  // Final state of a seller withdrawal (see requestWithdrawal in src/lib/actions/ledger.ts) —
+  // reference is our own "WD-..." value, echoed back by Paystack on the transfer.
+  if (event.event === "transfer.success" || event.event === "transfer.failed" || event.event === "transfer.reversed") {
+    const transferReference: string | undefined = event.data?.reference;
+    if (transferReference) {
+      await resolveWithdrawal(transferReference, event.event === "transfer.success" ? "success" : "failed");
+    }
     return NextResponse.json({ received: true });
   }
 

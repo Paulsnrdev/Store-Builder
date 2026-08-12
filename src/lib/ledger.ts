@@ -42,3 +42,24 @@ export async function creditStoreLedger(input: {
 
   return { ok: true };
 }
+
+/**
+ * Resolves a PENDING withdrawal once Paystack's transfer webhook reports its final state.
+ * On failure/reversal, the balance is credited back — the debit happened when the seller
+ * requested the withdrawal, but if the transfer didn't actually go through, that money never
+ * left the platform's account and shouldn't stay deducted from their ledger. A no-op if the
+ * entry isn't PENDING (already resolved, or this is a replayed webhook delivery).
+ */
+export async function resolveWithdrawal(reference: string, outcome: "success" | "failed"): Promise<void> {
+  const entry = await prisma.ledgerEntry.findUnique({ where: { reference } });
+  if (!entry || entry.reason !== "WITHDRAWAL" || entry.status !== "PENDING") return;
+
+  const newStatus = outcome === "success" ? "COMPLETED" : "FAILED";
+
+  await prisma.$transaction([
+    prisma.ledgerEntry.update({ where: { id: entry.id }, data: { status: newStatus } }),
+    ...(outcome === "failed"
+      ? [prisma.store.update({ where: { id: entry.storeId }, data: { ledgerBalance: { increment: Number(entry.amount) } } })]
+      : []),
+  ]);
+}

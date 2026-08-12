@@ -73,10 +73,10 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
   // clamp rather than error, so a gated field doesn't block saving the rest of this form.
   const themeFont = hasFeature(store.subscription, "THEME_CUSTOMIZATION") ? data.themeFont : "sans";
 
-  // A previously-created Paystack subaccount (see getOrCreateStoreSubaccount in orders.ts) is
-  // tied to the bank details it was created with — if those changed, drop it so a fresh one
-  // gets provisioned against the new account instead of silently branding transfers with a
-  // subaccount that now points at the wrong bank.
+  // A previously-created Paystack subaccount (see getOrCreateStoreSubaccount in orders.ts) and
+  // Transfer Recipient (see getOrCreateTransferRecipient in actions/ledger.ts) are both tied
+  // to the bank details they were created with. If those changed, drop both so a withdrawal
+  // can't send real money to a bank account the seller no longer controls.
   const bankDetailsChanged = data.bankAccountNumber !== store.bankAccountNumber || data.bankCode !== store.bankCode;
 
   await prisma.store.update({
@@ -106,6 +106,7 @@ export async function updateStoreSettings(_prev: SettingsFormState, formData: Fo
       bankAccountName: data.bankAccountName,
       bankAccountVerified: data.bankAccountVerified,
       paystackSubaccountCode: bankDetailsChanged ? null : undefined,
+      paystackTransferRecipientCode: bankDetailsChanged ? null : undefined,
       paystackPublicKey: data.paystackPublicKey,
       isPublished: data.isPublished,
     },

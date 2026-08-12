@@ -112,6 +112,9 @@ model Store {
   // the platform's own — set with percentage_charge: 100 so nothing auto-settles to the
   // seller's bank; the pooled ledger stays the only payout path.
   paystackSubaccountCode  String?
+  // Lazily created (see getOrCreateTransferRecipient in ledger.ts) once bankAccountVerified —
+  // Paystack requires a Transfer Recipient before it'll send money to a bank account.
+  paystackTransferRecipientCode String?
   isSuspended             Boolean @default(false)
   suspendedAt             DateTime?
   suspendedReason         String?
