@@ -165,6 +165,18 @@ type CreateOrderVirtualAccountResult =
  * wired up here — it needs a bank-code-resolved Paystack subaccount per store, which nothing
  * in this codebase does yet, so accounts created here show the platform's own name.
  */
+/**
+ * Paystack's customer API rejects local Nigerian numbers (e.g. "07069094959") as invalid —
+ * it needs international format. Buyers only ever enter the local form at checkout, so this
+ * converts 0XXXXXXXXXX -> +234XXXXXXXXXX. Leaves anything already in +234/234 form untouched.
+ */
+function toInternationalNigerianPhone(phone: string): string {
+  const digits = phone.replace(/[^\d]/g, "");
+  if (digits.startsWith("234")) return `+${digits}`;
+  if (digits.startsWith("0")) return `+234${digits.slice(1)}`;
+  return `+234${digits}`;
+}
+
 export async function createOrderVirtualAccount(input: { email: string; name: string; phone: string }): Promise<CreateOrderVirtualAccountResult> {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey) return { ok: false, error: "Paystack is not configured yet." };
@@ -175,7 +187,7 @@ export async function createOrderVirtualAccount(input: { email: string; name: st
   const customerRes = await fetch(`${PAYSTACK_BASE_URL}/customer`, {
     method: "POST",
     headers: { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ email: input.email, first_name: firstName, last_name: lastName, phone: input.phone }),
+    body: JSON.stringify({ email: input.email, first_name: firstName, last_name: lastName, phone: toInternationalNigerianPhone(input.phone) }),
   });
   const customerJson = await customerRes.json();
   if (!customerRes.ok || !customerJson.status) {
