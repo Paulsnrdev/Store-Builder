@@ -7,7 +7,7 @@ import { requireStoreOwner } from "@/lib/store";
 import { createTransferRecipient, initiateTransfer } from "@/lib/paystack";
 import type { Store } from "@/generated/prisma/client";
 
-type WithdrawResult = { ok: true } | { ok: false; error: string };
+type WithdrawResult = { ok: true; reference: string; status: "COMPLETED" | "PENDING" } | { ok: false; error: string };
 
 /** Lazily creates and caches a Paystack Transfer Recipient for a store's verified bank account. */
 async function getOrCreateTransferRecipient(store: Store): Promise<{ ok: true; recipientCode: string } | { ok: false; error: string }> {
@@ -57,6 +57,8 @@ export async function requestWithdrawal(amount: number): Promise<WithdrawResult>
   });
   if (!transfer.ok) return { ok: false, error: transfer.error };
 
+  const status = transfer.status === "success" ? "COMPLETED" : "PENDING";
+
   try {
     await prisma.$transaction(async (tx) => {
       const current = await tx.store.findUniqueOrThrow({ where: { id: store.id }, select: { ledgerBalance: true } });
@@ -69,14 +71,7 @@ export async function requestWithdrawal(amount: number): Promise<WithdrawResult>
       }
 
       await tx.ledgerEntry.create({
-        data: {
-          storeId: store.id,
-          type: "DEBIT",
-          reason: "WITHDRAWAL",
-          status: transfer.status === "success" ? "COMPLETED" : "PENDING",
-          amount,
-          reference,
-        },
+        data: { storeId: store.id, type: "DEBIT", reason: "WITHDRAWAL", status, amount, reference },
       });
 
       await tx.store.update({ where: { id: store.id }, data: { ledgerBalance: { decrement: amount } } });
@@ -87,5 +82,17 @@ export async function requestWithdrawal(amount: number): Promise<WithdrawResult>
   }
 
   revalidatePath("/dashboard/balance");
-  return { ok: true };
+  return { ok: true, reference, status };
+}
+
+/**
+ * Polled client-side by WithdrawForm right after a withdrawal so the UI can flip from
+ * "Processing" to "Completed"/"Failed" the moment Paystack's transfer webhook resolves it,
+ * instead of the seller having to manually reload the page to see the final state.
+ */
+export async function getWithdrawalStatus(reference: string): Promise<"PENDING" | "COMPLETED" | "FAILED" | null> {
+  const store = await requireStoreOwner();
+  const entry = await prisma.ledgerEntry.findUnique({ where: { reference } });
+  if (!entry || entry.storeId !== store.id) return null;
+  return entry.status as "PENDING" | "COMPLETED" | "FAILED";
 }
